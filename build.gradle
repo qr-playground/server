@@ -1,0 +1,62 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.3.1'
+	id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	// ========== Web, Security, Validation ==========
+	implementation 'org.springframework.boot:spring-boot-starter-web' // Spring Web
+	implementation 'org.springframework.boot:spring-boot-starter-security' // Spring Security
+	implementation 'org.springframework.boot:spring-boot-starter-validation' // Validation
+
+	// ========== JPA & DB ==========
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA
+	runtimeOnly 'com.h2database:h2' // H2
+	runtimeOnly 'org.postgresql:postgresql' // PostgreSQL
+
+	// ========== API 문서화 (Swagger) ==========
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2' // Swagger UI
+
+	// ========== JWT ==========
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// ========== Spring 부가 기능 ==========
+	implementation 'org.springframework.boot:spring-boot-starter-actuator' // 모니터링
+	developmentOnly 'org.springframework.boot:spring-boot-devtools' // 핫리로드
+
+	// ========== Lombok ==========
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// ========== 테스트 ==========
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

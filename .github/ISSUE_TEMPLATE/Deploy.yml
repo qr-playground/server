@@ -1,0 +1,22 @@
+name: "🚀 Deploy"
+description: "배포 관련 작업"
+labels: ["deploy"]
+body:
+  - type: textarea
+    attributes:
+      label: 📄 배포 계획
+      description: 배포 일시와 목적을 작성해주세요.
+      placeholder: 자세히 적을수록 좋습니다!
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: ✅ 배포 활동
+      description: 배포 활동 내역과 링크를 작성해주세요.
+      placeholder: 최대한 세분화 해서 적어주세요!
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 🙋🏻 참고 자료
+      description: 참고 자료가 있다면 작성해 주세요.

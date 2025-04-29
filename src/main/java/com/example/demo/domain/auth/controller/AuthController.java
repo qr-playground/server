@@ -29,14 +29,14 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(requestDto));
     }
 
-    // /**
-    //  * 로그인 API
-    //  * 
-    //  * @param requestDto 로그인 요청 정보
-    //  * @return 토큰 정보
-    //  */
-    // @PostMapping("/login")
-    // public ResponseEntity<TokenDto> login(@Valid @RequestBody LoginDto requestDto) {
-    //     return ResponseEntity.ok(authService.login(requestDto));
-    // }
+    /**
+     * 로그인 API
+     * 
+     * @param requestDto 로그인 요청 정보
+     * @return 토큰 정보
+     */
+    @PostMapping("/login")
+    public ResponseEntity<AuthDto.Response> login(@Valid @RequestBody AuthDto.Login requestDto) {
+        return ResponseEntity.ok(authService.login(requestDto));
+    }
 }

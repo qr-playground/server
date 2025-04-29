@@ -50,16 +50,55 @@ public class AuthDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Response {
-        private UUID id;
-        private String phoneNumber;
-        private Role role;
 
-        public static Response fromEntity(User user) {
+        private UserInfo userInfo;
+        private TokenInfo tokenInfo;
+
+        public static Response of(User user) {
             return Response.builder()
-                    .id(user.getId())
-                    .phoneNumber(user.getPhoneNumber())
-                    .role(user.getRole())
+                    .userInfo(UserInfo.builder()
+                            .id(user.getId())
+                            .phoneNumber(user.getPhoneNumber())
+                            .role(user.getRole())
+                            .build())
                     .build();
+        }
+
+        public static Response of(User user, TokenDto tokenDto) {
+            return Response.builder()
+                    .userInfo(UserInfo.builder()
+                            .id(user.getId())
+                            .phoneNumber(user.getPhoneNumber())
+                            .role(user.getRole())
+                            .build())
+                    .tokenInfo(TokenInfo.builder()
+                            .grantType(tokenDto.getGrantType())
+                            .accessToken(tokenDto.getAccessToken())
+                            .refreshToken(tokenDto.getRefreshToken())
+                            .accessTokenExpiresIn(tokenDto.getAccessTokenExpiresIn())
+                            .build())
+                    .build();
+        }
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class UserInfo {
+            private UUID id;
+            private String phoneNumber;
+            private Role role;
+        }
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class TokenInfo {
+            private String grantType;
+            private String accessToken;
+            private String refreshToken;
+            private Long accessTokenExpiresIn;
         }
     }
 }

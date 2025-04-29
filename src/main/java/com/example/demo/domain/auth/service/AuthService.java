@@ -43,41 +43,41 @@ public class AuthService {
             throw new CustomException(ErrorCode.AUTH_DUPLICATE_USER);
         }
 
-        // 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
-
         // 사용자 엔티티 생성
-        User newUser = requestDto.toEntity(encodedPassword);
+        User newUser = requestDto.toEntity(passwordEncoder.encode(requestDto.getPassword()));
 
         // 저장 및 응답 변환
-        return AuthDto.Response.fromEntity(userRepository.save(newUser));
+        return AuthDto.Response.of(userRepository.save(newUser));
     }
 
-    // /**
-    // * 로그인 및 토큰 발급
-    // */
-    // @Transactional
-    // public TokenDto login(LoginDto requestDto) {
-    // // 인증 토큰 생성
-    // UsernamePasswordAuthenticationToken authenticationToken = new
-    // UsernamePasswordAuthenticationToken(
-    // requestDto.getPhoneNumber(), requestDto.getPassword());
+    /**
+     * 로그인 및 토큰 발급
+     */
+    @Transactional
+    public AuthDto.Response login(AuthDto.Login requestDto) {
+        // 인증 토큰 생성
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                requestDto.getPhoneNumber(), requestDto.getPassword());
 
-    // // 실제 인증 진행 (CustomUserDetailsService.loadUserByUsername 메서드가 실행됨)
-    // Authentication authentication =
-    // authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-    // SecurityContextHolder.getContext().setAuthentication(authentication);
+        // 실제 인증 진행 (CustomUserDetailsService.loadUserByUsername 메서드가 실행됨)
+        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-    // // JWT 토큰 생성
-    // String accessToken = jwtTokenProvider.createToken(authentication);
-    // String refreshToken =
-    // jwtTokenProvider.createRefreshToken(authentication.getName());
+        // 사용자 정보 조회
+        User user = userRepository.findByPhoneNumber(requestDto.getPhoneNumber())
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_NOT_FOUND_USER));
 
-    // return TokenDto.builder()
-    // .grantType("Bearer")
-    // .accessToken(accessToken)
-    // .refreshToken(refreshToken)
-    // .accessTokenExpiresIn(jwtTokenProvider.getAccessTokenExpiresIn())
-    // .build();
-    // }
+        // JWT 토큰 생성
+        String accessToken = jwtTokenProvider.createToken(authentication);
+        String refreshToken = jwtTokenProvider.createRefreshToken(authentication.getName());
+
+        TokenDto tokenDto = TokenDto.builder()
+                .grantType("Bearer")
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTokenExpiresIn(jwtTokenProvider.getAccessTokenExpiresIn())
+                .build();
+
+        return AuthDto.Response.of(user, tokenDto);
+    }
 }

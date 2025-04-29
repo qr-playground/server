@@ -23,7 +23,8 @@ public enum ErrorCode {
     AUTH_ACCESS_DENIED(HttpStatus.FORBIDDEN, 1004, "접근 권한이 없습니다"),
     AUTH_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, 1005, "엔티티를 찾을 수 없습니다"),
     AUTH_DUPLICATE_USER(HttpStatus.CONFLICT, 1006, "이미 가입된 사용자입니다"),
-
+    AUTH_NOT_FOUND_USER(HttpStatus.NOT_FOUND, 1007, "존재하지 않는 사용자입니다"),
+    
     // QR 관련 에러 2000 ~ 2999 --------------------------------
     QR_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 2000, "QR 오류가 발생했습니다"),
     QR_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, 2001, "잘못된 입력값입니다"),

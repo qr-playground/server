@@ -1,6 +1,6 @@
 package com.example.demo.domain.auth.controller;
 
-import com.example.demo.domain.auth.dto.LoginRequestDto;
+import com.example.demo.domain.auth.dto.AuthDto;
 import com.example.demo.domain.auth.dto.TokenDto;
 import com.example.demo.domain.auth.service.AuthService;
 import com.example.demo.domain.user.dto.UserDto;
@@ -21,22 +21,22 @@ public class AuthController {
     /**
      * 회원가입 API
      * 
-     * @param requestDto 회원가입 요청 정보
+     * @param AuthDto.Signup 회원가입 요청 정보
      * @return 생성된 사용자 정보
      */
     @PostMapping("/signup")
-    public ResponseEntity<UserDto.Response> signup(@Valid @RequestBody UserDto.Create requestDto) {
+    public ResponseEntity<AuthDto.Response> signup(@Valid @RequestBody AuthDto.Signup requestDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(requestDto));
     }
 
-    /**
-     * 로그인 API
-     * 
-     * @param requestDto 로그인 요청 정보
-     * @return 토큰 정보
-     */
-    @PostMapping("/login")
-    public ResponseEntity<TokenDto> login(@Valid @RequestBody LoginRequestDto requestDto) {
-        return ResponseEntity.ok(authService.login(requestDto));
-    }
+    // /**
+    //  * 로그인 API
+    //  * 
+    //  * @param requestDto 로그인 요청 정보
+    //  * @return 토큰 정보
+    //  */
+    // @PostMapping("/login")
+    // public ResponseEntity<TokenDto> login(@Valid @RequestBody LoginDto requestDto) {
+    //     return ResponseEntity.ok(authService.login(requestDto));
+    // }
 }

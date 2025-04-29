@@ -1,7 +1,8 @@
 package com.example.demo.global.error;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
+
+import lombok.Getter;
 
 @Getter
 public enum ErrorCode {
@@ -24,7 +25,9 @@ public enum ErrorCode {
     AUTH_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, 1005, "엔티티를 찾을 수 없습니다"),
     AUTH_DUPLICATE_USER(HttpStatus.CONFLICT, 1006, "이미 가입된 사용자입니다"),
     AUTH_NOT_FOUND_USER(HttpStatus.NOT_FOUND, 1007, "존재하지 않는 사용자입니다"),
-    
+    AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, 1008, "비밀번호가 일치하지 않습니다"),
+
+
     // QR 관련 에러 2000 ~ 2999 --------------------------------
     QR_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 2000, "QR 오류가 발생했습니다"),
     QR_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, 2001, "잘못된 입력값입니다"),
@@ -32,7 +35,7 @@ public enum ErrorCode {
     QR_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, 2003, "인증에 실패했습니다"),
     QR_ACCESS_DENIED(HttpStatus.FORBIDDEN, 2004, "접근 권한이 없습니다"),
     QR_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, 2005, "엔티티를 찾을 수 없습니다"),
-            
+
     // USER 관련 에러 3000 ~ 3999 --------------------------------
     USER_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 3000, "사용자 오류가 발생했습니다"),
     USER_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, 3001, "잘못된 입력값입니다"),

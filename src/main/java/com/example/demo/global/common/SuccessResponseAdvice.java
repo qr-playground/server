@@ -24,13 +24,10 @@ public class SuccessResponseAdvice implements ResponseBodyAdvice<Object> {
     }
 
     @Override
-    public Object beforeBodyWrite(
-            Object body,
-            MethodParameter returnType,
+    public Object beforeBodyWrite(Object body, MethodParameter returnType,
             MediaType selectedContentType,
             Class<? extends HttpMessageConverter<?>> selectedConverterType,
-            ServerHttpRequest request,
-            ServerHttpResponse response) {
+            ServerHttpRequest request, ServerHttpResponse response) {
 
         HttpServletResponse servletResponse = ((ServletServerHttpResponse) response).getServletResponse();
         int status = servletResponse.getStatus();

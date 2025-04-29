@@ -1,18 +1,8 @@
 package com.example.demo.domain.auth.service;
 
-import com.example.demo.domain.auth.dto.AuthDto;
-import com.example.demo.domain.auth.dto.TokenDto;
-import com.example.demo.domain.user.dto.UserDto;
-import com.example.demo.domain.user.entity.Role;
-import com.example.demo.domain.user.entity.User;
-import com.example.demo.domain.user.repository.UserRepository;
-import com.example.demo.global.error.ErrorCode;
-import com.example.demo.global.error.exception.CustomException;
-import com.example.demo.global.security.jwt.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Optional;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -20,6 +10,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.demo.domain.auth.dto.AuthDto;
+import com.example.demo.domain.auth.dto.TokenDto;
+import com.example.demo.domain.user.entity.User;
+import com.example.demo.domain.user.repository.UserRepository;
+import com.example.demo.global.error.ErrorCode;
+import com.example.demo.global.error.exception.CustomException;
+import com.example.demo.global.security.jwt.JwtTokenProvider;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -55,29 +55,34 @@ public class AuthService {
      */
     @Transactional
     public AuthDto.Response login(AuthDto.Login requestDto) {
+        // 사용자 존재 여부 먼저 확인 (CustomException 사용)
+        User user = userRepository.findByPhoneNumber(requestDto.getPhoneNumber())
+                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_NOT_FOUND_USER));
+
         // 인증 토큰 생성
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 requestDto.getPhoneNumber(), requestDto.getPassword());
 
-        // 실제 인증 진행 (CustomUserDetailsService.loadUserByUsername 메서드가 실행됨)
-        Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            // 실제 인증 진행 (비밀번호 검증)
+            Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 사용자 정보 조회
-        User user = userRepository.findByPhoneNumber(requestDto.getPhoneNumber())
-                .orElseThrow(() -> new CustomException(ErrorCode.AUTH_NOT_FOUND_USER));
+            // JWT 토큰 생성
+            String accessToken = jwtTokenProvider.createToken(authentication);
+            String refreshToken = jwtTokenProvider.createRefreshToken(authentication.getName());
 
-        // JWT 토큰 생성
-        String accessToken = jwtTokenProvider.createToken(authentication);
-        String refreshToken = jwtTokenProvider.createRefreshToken(authentication.getName());
+            TokenDto tokenDto = TokenDto.builder()
+                    .grantType("Bearer")
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .accessTokenExpiresIn(jwtTokenProvider.getAccessTokenExpiresIn())
+                    .build();
 
-        TokenDto tokenDto = TokenDto.builder()
-                .grantType("Bearer")
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .accessTokenExpiresIn(jwtTokenProvider.getAccessTokenExpiresIn())
-                .build();
-
-        return AuthDto.Response.of(user, tokenDto);
+            return AuthDto.Response.of(user, tokenDto);
+        } catch (BadCredentialsException e) {
+            // 비밀번호 불일치 예외
+            throw new CustomException(ErrorCode.AUTH_INVALID_CREDENTIALS);
+        }
     }
 }

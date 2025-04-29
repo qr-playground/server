@@ -59,7 +59,8 @@ public class SecurityConfig {
                                 // 요청에 대한 인가 규칙 설정
                                 .authorizeHttpRequests(auth -> auth
                                                 // 인증 없이 접근 가능한 경로
-                                                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                                .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**")
+                                                .permitAll()
                                                 // 관리자 권한 필요
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 // 그 외 모든 요청은 인증 필요

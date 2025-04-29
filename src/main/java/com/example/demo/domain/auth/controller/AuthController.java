@@ -1,15 +1,17 @@
 package com.example.demo.domain.auth.controller;
 
-import com.example.demo.domain.auth.dto.AuthDto;
-import com.example.demo.domain.auth.dto.TokenDto;
-import com.example.demo.domain.auth.service.AuthService;
-import com.example.demo.domain.user.dto.UserDto;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.domain.auth.dto.AuthDto;
+import com.example.demo.domain.auth.service.AuthService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")

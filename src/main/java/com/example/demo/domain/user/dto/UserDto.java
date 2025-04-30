@@ -1,15 +1,15 @@
 package com.example.demo.domain.user.dto;
 
-import com.example.demo.domain.user.entity.User;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import com.example.demo.domain.user.entity.Role;
+import com.example.demo.domain.user.entity.User;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 public class UserDto {
 

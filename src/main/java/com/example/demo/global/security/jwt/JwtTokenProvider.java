@@ -14,26 +14,31 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import com.example.demo.global.security.user.CustomUserDetails;
+import com.example.demo.global.security.user.CustomUserDetailsService;
+
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 public class JwtTokenProvider {
-
+    private final CustomUserDetailsService customUserDetailsService;
     private final Key key;
     private final long tokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
 
-    public JwtTokenProvider(JwtProperties jwtProperties) {
+    public JwtTokenProvider(JwtProperties jwtProperties, CustomUserDetailsService customUserDetailsService) {
         // JwtProperties에서 설정값 가져오기
         String secret = jwtProperties.getSecret();
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.tokenValidityInMilliseconds = jwtProperties.getTokenValidityInSeconds() * 1000;
         this.refreshTokenValidityInMilliseconds = jwtProperties.getRefreshTokenValidityInSeconds() * 1000;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     /**
@@ -85,9 +90,10 @@ public class JwtTokenProvider {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
+        String phoneNumber = claims.getSubject();
+        CustomUserDetails userDetails = customUserDetailsService.loadUserByUsername(phoneNumber);
 
-        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+        return new UsernamePasswordAuthenticationToken(userDetails, token, authorities);
     }
 
     /**

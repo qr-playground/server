@@ -27,7 +27,6 @@ public enum ErrorCode {
     AUTH_NOT_FOUND_USER(HttpStatus.NOT_FOUND, 1007, "존재하지 않는 사용자입니다"),
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, 1008, "비밀번호가 일치하지 않습니다"),
 
-
     // QR 관련 에러 2000 ~ 2999 --------------------------------
     QR_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, 2000, "QR 오류가 발생했습니다"),
     QR_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, 2001, "잘못된 입력값입니다"),
@@ -43,6 +42,7 @@ public enum ErrorCode {
     USER_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, 3003, "인증에 실패했습니다"),
     USER_ACCESS_DENIED(HttpStatus.FORBIDDEN, 3004, "접근 권한이 없습니다"),
     USER_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, 3005, "엔티티를 찾을 수 없습니다"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, 3006, "사용자를 찾을 수 없습니다"),
 
     // 100000 이상은 예외 처리 오류 코드 범위 --------------------------------
     OUT_OF_RANGE_ERROR(HttpStatus.BAD_REQUEST, 100000, "예외 처리 오류 코드 범위 초과");

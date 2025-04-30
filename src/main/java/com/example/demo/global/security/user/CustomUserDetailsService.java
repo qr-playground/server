@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.domain.user.entity.User;
 import com.example.demo.domain.user.repository.UserRepository;
+import com.example.demo.global.error.exception.UserNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,14 +26,14 @@ public class CustomUserDetailsService implements UserDetailsService {
      * 전화번호를 기반으로 사용자 정보를 조회하여 UserDetails 객체로 변환
      * 
      * @param phoneNumber 사용자 전화번호 (username 역할)
-     * @return UserDetails 구현체인 PrincipalDetails 객체
+     * @return UserDetails 구현체인 CustomUserDetails 객체
      * @throws UsernameNotFoundException 사용자를 찾을 수 없는 경우 발생
      */
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String phoneNumber) throws UsernameNotFoundException {
+    public CustomUserDetails loadUserByUsername(String phoneNumber) {
         User user = userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new UsernameNotFoundException("해당 전화번호로 가입된 사용자를 찾을 수 없습니다: " + phoneNumber));
+                .orElseThrow(() -> new UserNotFoundException(phoneNumber));
 
         return new CustomUserDetails(user);
     }

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.demo.global.error.exception.CustomException;
+import com.example.demo.global.error.exception.UserNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,17 @@ public class GlobalExceptionHandler {
                 ErrorResponse response = ErrorResponse.of(
                                 code,
                                 request.getRequestURI());
+
+                return ResponseEntity.status(code.getStatus()).body(response);
+        }
+
+        // 토큰 인증 실패
+        @ExceptionHandler(UserNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex,
+                        HttpServletRequest request) {
+                ErrorCode code = ex.getErrorCode();
+
+                ErrorResponse response = ErrorResponse.of(code, request.getRequestURI());
 
                 return ResponseEntity.status(code.getStatus()).body(response);
         }

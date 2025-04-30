@@ -31,8 +31,9 @@ public class AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     /**
-     * 회원가입
+     * 회원가입 
      */
+    // ! TODO: 회원가입 시 핸드폰 번호 문자 인증
     @Transactional
     public AuthDto.Response signup(AuthDto.Signup requestDto) {
 
@@ -51,9 +52,9 @@ public class AuthService {
     }
 
     /**
-     * 로그인 및 토큰 발급
+     * 로그인 및 토큰 발급 
      */
-    @Transactional
+    @Transactional // ! TODO: readonly 처리
     public AuthDto.Response login(AuthDto.Login requestDto) {
         // 사용자 존재 여부 먼저 확인 (CustomException 사용)
         User user = userRepository.findByPhoneNumber(requestDto.getPhoneNumber())

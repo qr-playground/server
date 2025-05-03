@@ -32,7 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     public CustomUserDetails loadUserByUsername(String phoneNumber) {
         User user = userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new UserNotFoundException(phoneNumber));
+                .orElseThrow(() -> new UserNotFoundException());
 
         return new CustomUserDetails(user);
     }

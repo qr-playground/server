@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -23,7 +23,11 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserDto.Response> getMe(@AuthenticationPrincipal CustomUserDetails userDetails) {
-
         return ResponseEntity.ok(userService.getUser(userDetails.getUser().getId()));
+    }
+
+    @GetMapping("/me/qrcode")
+    public ResponseEntity<UserDto.Response> getMeWithQrcodes(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok(userService.getUserWithQrcodes(userDetails.getUser().getId()));
     }
 }

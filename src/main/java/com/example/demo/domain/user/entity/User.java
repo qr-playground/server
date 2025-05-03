@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.example.demo.domain.qrcode.entity.Qrcode;
+import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 
 @Entity
 @Table(name = "users")
@@ -35,7 +35,7 @@ public class User {
     private Role role; // * 유저 권한 [USER, ADMIN]
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Qrcode> qrcodes = new ArrayList<>();
+    private List<QrcodeEvent> qrcodeEvents = new ArrayList<>();
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;

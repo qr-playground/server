@@ -18,7 +18,7 @@ import com.example.demo.domain.user.repository.UserRepository;
 import com.example.demo.global.error.ErrorCode;
 import com.example.demo.global.error.exception.CustomException;
 import com.example.demo.global.security.jwt.JwtTokenProvider;
-
+import com.example.demo.global.security.jwt.JwtProperties;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,6 +29,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
+    private final JwtProperties jwtProperties;
 
     /**
      * 회원가입 
@@ -48,13 +49,13 @@ public class AuthService {
         User newUser = requestDto.toEntity(passwordEncoder.encode(requestDto.getPassword()));
 
         // 저장 및 응답 변환
-        return AuthDto.Response.of(userRepository.save(newUser));
+        return AuthDto.Response.fromEntity(userRepository.save(newUser));
     }
 
     /**
      * 로그인 및 토큰 발급 
      */
-    @Transactional // ! TODO: readonly 처리
+    @Transactional(readOnly = true)
     public AuthDto.Response login(AuthDto.Login requestDto) {
         // 사용자 존재 여부 먼저 확인 (CustomException 사용)
         User user = userRepository.findByPhoneNumber(requestDto.getPhoneNumber())
@@ -74,13 +75,13 @@ public class AuthService {
             String refreshToken = jwtTokenProvider.createRefreshToken(authentication.getName());
 
             TokenDto tokenDto = TokenDto.builder()
-                    .grantType("Bearer")
+                    .grantType(jwtProperties.getGrantType())
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
-                    .accessTokenExpiresIn(jwtTokenProvider.getAccessTokenExpiresIn())
+                    .accessTokenExpiresIn(jwtProperties.getTokenValidityInSeconds())
                     .build();
 
-            return AuthDto.Response.of(user, tokenDto);
+            return AuthDto.Response.fromEntity(user, tokenDto);
         } catch (BadCredentialsException e) {
             // 비밀번호 불일치 예외
             throw new CustomException(ErrorCode.AUTH_INVALID_CREDENTIALS);

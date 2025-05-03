@@ -54,29 +54,16 @@ public class AuthDto {
         private UserInfo userInfo;
         private TokenInfo tokenInfo;
 
-        public static Response of(User user) {
+        public static Response fromEntity(User user) {
             return Response.builder()
-                    .userInfo(UserInfo.builder()
-                            .id(user.getId())
-                            .phoneNumber(user.getPhoneNumber())
-                            .role(user.getRole())
-                            .build())
+                    .userInfo(UserInfo.fromEntity(user))
                     .build();
         }
 
-        public static Response of(User user, TokenDto tokenDto) {
+        public static Response fromEntity(User user, TokenDto tokenDto) {
             return Response.builder()
-                    .userInfo(UserInfo.builder()
-                            .id(user.getId())
-                            .phoneNumber(user.getPhoneNumber())
-                            .role(user.getRole())
-                            .build())
-                    .tokenInfo(TokenInfo.builder()
-                            .grantType(tokenDto.getGrantType())
-                            .accessToken(tokenDto.getAccessToken())
-                            .refreshToken(tokenDto.getRefreshToken())
-                            .accessTokenExpiresIn(tokenDto.getAccessTokenExpiresIn())
-                            .build())
+                    .userInfo(UserInfo.fromEntity(user))
+                    .tokenInfo(TokenInfo.fromDto(tokenDto))
                     .build();
         }
 
@@ -88,6 +75,14 @@ public class AuthDto {
             private UUID id;
             private String phoneNumber;
             private Role role;
+
+            public static UserInfo fromEntity(User user) {
+                return UserInfo.builder()
+                        .id(user.getId())
+                        .phoneNumber(user.getPhoneNumber())
+                        .role(user.getRole())
+                        .build();
+            }
         }
 
         @Data
@@ -99,6 +94,15 @@ public class AuthDto {
             private String accessToken;
             private String refreshToken;
             private Long accessTokenExpiresIn;
+
+            public static TokenInfo fromDto(TokenDto tokenDto) {
+                return TokenInfo.builder()
+                        .grantType(tokenDto.getGrantType())
+                        .accessToken(tokenDto.getAccessToken())
+                        .refreshToken(tokenDto.getRefreshToken())
+                        .accessTokenExpiresIn(tokenDto.getAccessTokenExpiresIn())
+                        .build();
+            }
         }
     }
 }

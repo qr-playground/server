@@ -5,19 +5,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.example.demo.domain.user.entity.User;
 import com.example.demo.domain.guestbook.entity.Guestbook;
+import com.example.demo.domain.user.entity.User;
+
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.AccessLevel;
 
 @Entity
 @Table(name = "qrcode")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Qrcode {
+public class QrcodeEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,7 +29,7 @@ public class Qrcode {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "qrcode", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL)
     private List<Guestbook> guestbooks = new ArrayList<>();
 
     @Column(name = "title", nullable = false)
@@ -36,9 +37,6 @@ public class Qrcode {
 
     @Column(name = "description", nullable = true)
     private String description;
-
-    @Column(name = "url", nullable = false)
-    private String url;
 
     @Column(name = "group_code", nullable = true)
     private String groupCode;
@@ -58,6 +56,9 @@ public class Qrcode {
     @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime updatedAt;
 
+    @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL)
+    private QrcodeDesign qrcodeDesign;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -70,12 +71,11 @@ public class Qrcode {
     }
 
     @Builder
-    public Qrcode(User user, String title, String description, String url,
-            String groupCode, LocalDateTime entryStartAt, LocalDateTime entryEndAt) {
+    public QrcodeEvent(User user, String title, String description, String groupCode,
+            LocalDateTime entryStartAt, LocalDateTime entryEndAt) {
         this.user = user;
         this.title = title;
         this.description = description;
-        this.url = url;
         this.groupCode = groupCode;
         this.entryStartAt = entryStartAt;
         this.entryEndAt = entryEndAt;

@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.example.demo.global.security.jwt.JwtAuthenticationFilter;
+import com.example.demo.global.security.jwt.JwtProperties;
 import com.example.demo.global.security.jwt.JwtTokenProvider;
 import com.example.demo.global.security.user.CustomUserDetailsService;
 
@@ -26,6 +27,7 @@ public class SecurityConfig {
 
         private final JwtTokenProvider jwtTokenProvider;
         private final CustomUserDetailsService customUserDetailsService;
+        private final JwtProperties jwtProperties;
 
         // 비밀번호 암호화 인코더
         @Bean
@@ -42,7 +44,7 @@ public class SecurityConfig {
         // JWT 인증 필터
         @Bean
         public JwtAuthenticationFilter jwtAuthenticationFilter() {
-                return new JwtAuthenticationFilter(jwtTokenProvider);
+                return new JwtAuthenticationFilter(jwtTokenProvider, jwtProperties);
         }
 
         // 보안 필터 체인 설정
@@ -59,6 +61,7 @@ public class SecurityConfig {
                                 // 요청에 대한 인가 규칙 설정
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/users").authenticated()
+                                                .requestMatchers("/api/qrcode/event").authenticated()
                                                 // 인증 없이 접근 가능한 경로
                                                 .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                                                 // 관리자 권한 필요

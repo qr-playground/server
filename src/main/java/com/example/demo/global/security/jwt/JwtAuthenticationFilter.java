@@ -22,8 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
+    private final JwtProperties jwtProperties;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -40,6 +39,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             log.debug("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}", authentication.getName(), requestURI);
         } else {
             log.debug("유효한 JWT 토큰이 없습니다, uri: {}", requestURI);
+            SecurityContextHolder.clearContext();
+            // 필터에서 예외를 던지지 않고, SpringSecurity가 인증되지 않은 접근을 처리하도록 함
+            // SecurityConfig에 설정된 authenticationEntryPoint가 401 응답을 반환함
         }
 
         filterChain.doFilter(request, response);
@@ -49,8 +51,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * HTTP 요청 헤더에서 토큰 추출
      */
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+        String bearerToken = request.getHeader(jwtProperties.getAuthorizationHeader());
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(jwtProperties.getGrantType())) {
             return bearerToken.substring(7); // "Bearer " 이후의 토큰값만 추출
         }
         return null;

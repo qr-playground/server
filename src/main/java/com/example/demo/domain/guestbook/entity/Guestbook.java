@@ -3,7 +3,7 @@ package com.example.demo.domain.guestbook.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.example.demo.domain.qrcode.entity.Qrcode;
+import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,7 +12,7 @@ import lombok.AccessLevel;
 
 @Entity
 @Table(name = "guestbook", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "qrcode_id", "device_id" })
+        @UniqueConstraint(columnNames = { "qrcode_event_id", "device_id" })
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,8 +24,8 @@ public class Guestbook {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "qrcode_id", nullable = false)
-    private Qrcode qrcode;
+    @JoinColumn(name = "qrcode_event_id", nullable = false)
+    private QrcodeEvent qrcodeEvent;
 
     @Column(name = "device_id", nullable = false)
     private String deviceId;
@@ -45,8 +45,8 @@ public class Guestbook {
     }
 
     @Builder
-    public Guestbook(Qrcode qrcode, String deviceId, String name, String phoneNumber) {
-        this.qrcode = qrcode;
+    public Guestbook(QrcodeEvent qrcodeEvent, String deviceId, String name, String phoneNumber) {
+        this.qrcodeEvent = qrcodeEvent;
         this.deviceId = deviceId;
         this.name = name;
         this.phoneNumber = phoneNumber;

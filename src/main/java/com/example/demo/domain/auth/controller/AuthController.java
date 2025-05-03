@@ -34,7 +34,7 @@ public class AuthController {
     /**
      * 로그인 API
      * 
-     * @param requestDto 로그인 요청 정보
+     * @param AuthDto.Login 로그인 요청 정보
      * @return 토큰 정보
      */
     @PostMapping("/login")

@@ -16,16 +16,16 @@ import com.example.demo.global.error.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j 
-@RestControllerAdvice 
+@Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
         // 커스텀 예외 처리
         @ExceptionHandler(CustomException.class)
         public ResponseEntity<ErrorResponse> handleCustom(CustomException ex, HttpServletRequest request) {
                 ErrorCode code = ex.getErrorCode();
-                
-                log.error("커스텀 예외 발생", ex);
+
+                log.error("커스텀 예외 발생: [{}] {}", code, ex.getMessage());
 
                 ErrorResponse response = ErrorResponse.of(
                                 code,
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(UserNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex,
                         HttpServletRequest request) {
-                log.error("토큰 인증 실패", ex);
+                log.error("토큰 인증 실패: {}", ex.getMessage());
 
                 ErrorCode code = ex.getErrorCode();
 
@@ -53,8 +53,6 @@ public class GlobalExceptionHandler {
                         MethodArgumentNotValidException ex,
                         HttpServletRequest request) {
 
-                log.error("유효성 검사 예외 발생", ex);
-
                 ErrorCode code = ErrorCode.COMMON_INVALID_INPUT_VALUE;
 
                 List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
@@ -63,6 +61,7 @@ public class GlobalExceptionHandler {
                                                 err.getDefaultMessage()))
                                 .collect(Collectors.toList());
 
+                log.error("유효성 검사 실패: {}", fieldErrors);
                 ErrorResponse response = ErrorResponse.of(code, request.getRequestURI(), fieldErrors);
 
                 return ResponseEntity
@@ -75,7 +74,7 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
                         DataIntegrityViolationException ex,
                         HttpServletRequest request) {
-                log.error("DB 무결성 제약 위반", ex);
+                log.error("DB 무결성 제약 위반: {}", ex.getMessage());
 
                 ErrorCode code = ErrorCode.COMMON_QUERY_FAILED;
                 ErrorResponse response = ErrorResponse.of(code, request.getRequestURI());
@@ -89,7 +88,7 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ErrorResponse> handleDataAccess(
                         DataAccessException ex,
                         HttpServletRequest request) {
-                log.error("DB 접근 중 예외 발생", ex);
+                log.error("DB 접근 중 예외 발생: {}", ex.getMessage());
 
                 ErrorCode code = ErrorCode.COMMON_DB_CONNECTION_FAILED;
                 ErrorResponse response = ErrorResponse.of(code, request.getRequestURI());
@@ -98,11 +97,11 @@ public class GlobalExceptionHandler {
                                 .body(response);
         }
 
-        //처리되지 않은 모든 예외를 처리하는 기본 핸들러
+        // 처리되지 않은 모든 예외를 처리하는 기본 핸들러
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleException(
                         Exception e, HttpServletRequest request) {
-                log.error("처리되지 않은 예외 발생", e);
+                log.error("처리되지 않은 예외 발생: {} - {}", e.getClass().getName(), e.getMessage());
 
                 ErrorResponse response = ErrorResponse.of(
                                 ErrorCode.COMMON_INTERNAL_SERVER_ERROR,

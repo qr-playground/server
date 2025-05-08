@@ -3,12 +3,11 @@ package com.example.demo.domain.qrcode.dto;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.example.demo.domain.image.entity.Image;
 import com.example.demo.domain.qrcode.entity.QrcodeDesign;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import com.example.demo.domain.user.entity.User;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,60 +20,64 @@ public class QrcodeEventDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Create {
-        // QR 코드 이벤트 정보
-        @NotBlank(message = "제목을 입력해주세요")
+
+        // QrcodeEvent 정보
         private String title;
-
-        @NotNull(message = "설명을 입력해주세요")
         private String description;
-
-        private String groupCode;
-
-        @NotNull(message = "입장 시작 시간을 입력해주세요")
+        private String secretCode;
         private LocalDateTime entryStartAt;
-
-        @NotNull(message = "입장 종료 시간을 입력해주세요")
         private LocalDateTime entryEndAt;
 
-        // QR 코드 디자인 정보
-        @NotBlank(message = "상단 텍스트를 입력해주세요")
-        private String topText;
+        // QrcodeDesign 정보
+        private String errorCorrectionLevel;
+        private Boolean includeMargin;
+        private String backgroundColor;
+        private String pointColor;
+        private Integer size;
+        private String dotType;
 
-        @NotBlank(message = "하단 텍스트를 입력해주세요")
-        private String bottomText;
-
-        @NotBlank(message = "중앙 텍스트를 입력해주세요")
-        private String centerText;
-
-        @NotNull(message = "상단 폰트 크기를 입력해주세요")
-        private Integer topFontSize;
-
-        @NotNull(message = "하단 폰트 크기를 입력해주세요")
-        private Integer bottomFontSize;
-
-        @NotNull(message = "테두리 두께를 입력해주세요")
-        private Integer borderThickness;
+        // 로고 이미지 관련 정보 nullable 처리
+        private Integer logoVisualSize;
+        private Double logoVisualRatio;
+        private UUID logoImageId;
 
         public QrcodeEvent toEntity(User user) {
             return QrcodeEvent.builder()
                     .user(user)
                     .title(title)
                     .description(description)
-                    .groupCode(groupCode)
+                    .secretCode(secretCode)
                     .entryStartAt(entryStartAt)
                     .entryEndAt(entryEndAt)
                     .build();
         }
 
+        // 로고 이미지 있는 경우
+        public QrcodeDesign toEntity(QrcodeEvent qrcodeEvent, Image logoImage) {
+            return QrcodeDesign.builder()
+                    .qrcodeEvent(qrcodeEvent)
+                    .errorCorrectionLevel(errorCorrectionLevel)
+                    .includeMargin(includeMargin)
+                    .backgroundColor(backgroundColor)
+                    .pointColor(pointColor)
+                    .size(size)
+                    .dotType(dotType)
+                    .logoImage(logoImage)
+                    .logoVisualSize(logoVisualSize)
+                    .logoVisualRatio(logoVisualRatio)
+                    .build();
+        }
+
+        // 로고 이미지 없는 경우
         public QrcodeDesign toEntity(QrcodeEvent qrcodeEvent) {
             return QrcodeDesign.builder()
                     .qrcodeEvent(qrcodeEvent)
-                    .topText(topText)
-                    .bottomText(bottomText)
-                    .centerText(centerText)
-                    .topFontSize(topFontSize)
-                    .bottomFontSize(bottomFontSize)
-                    .borderThickness(borderThickness)
+                    .errorCorrectionLevel(errorCorrectionLevel)
+                    .includeMargin(includeMargin)
+                    .backgroundColor(backgroundColor)
+                    .pointColor(pointColor)
+                    .size(size)
+                    .dotType(dotType)
                     .build();
         }
     }
@@ -87,12 +90,17 @@ public class QrcodeEventDto {
 
         private QrcodeInfo qrcodeInfo;
 
+        public static Response fromEntity(QrcodeEvent qrcodeEvent, QrcodeDesign qrcodeDesign) {
+            return Response.builder()
+                    .qrcodeInfo(QrcodeInfo.fromEntity(qrcodeEvent, qrcodeDesign))
+                    .build();
+        }
+
         public static Response fromEntity(QrcodeEvent qrcodeEvent) {
             return Response.builder()
                     .qrcodeInfo(QrcodeInfo.fromEntity(qrcodeEvent))
                     .build();
         }
-
 
         @Data
         @Builder
@@ -102,11 +110,18 @@ public class QrcodeEventDto {
             private QrcodeEventInfo qrcodeEventInfo;
             private QrcodeDesignInfo qrcodeDesignInfo;
 
-            public static QrcodeInfo fromEntity(QrcodeEvent qrcodeEvent) {
-                QrcodeDesign qrcodeDesign = qrcodeEvent.getQrcodeDesign();
+            public static QrcodeInfo fromEntity(QrcodeEvent qrcodeEvent, QrcodeDesign qrcodeDesign) {
+
                 return QrcodeInfo.builder()
                         .qrcodeEventInfo(QrcodeEventInfo.fromEntity(qrcodeEvent))
-                        .qrcodeDesignInfo(qrcodeDesign == null ? null : QrcodeDesignInfo.fromEntity(qrcodeDesign))
+                        .qrcodeDesignInfo(QrcodeDesignInfo.fromEntity(qrcodeDesign))
+                        .build();
+            }
+
+            public static QrcodeInfo fromEntity(QrcodeEvent qrcodeEvent) {
+                return QrcodeInfo.builder()
+                        .qrcodeEventInfo(QrcodeEventInfo.fromEntity(qrcodeEvent))
+                        .qrcodeDesignInfo(QrcodeDesignInfo.fromEntity(qrcodeEvent.getQrcodeDesign()))
                         .build();
             }
         }
@@ -117,18 +132,20 @@ public class QrcodeEventDto {
         @AllArgsConstructor
         public static class QrcodeEventInfo {
             private UUID id;
+            private String shortId;
             private String title;
             private String description;
-            private String groupCode;
+            private String secretCode;
             private LocalDateTime entryStartAt;
             private LocalDateTime entryEndAt;
 
             public static QrcodeEventInfo fromEntity(QrcodeEvent qrcodeEvent) {
                 return QrcodeEventInfo.builder()
                         .id(qrcodeEvent.getId())
+                        .shortId(qrcodeEvent.getShortId())
                         .title(qrcodeEvent.getTitle())
                         .description(qrcodeEvent.getDescription())
-                        .groupCode(qrcodeEvent.getGroupCode())
+                        .secretCode(qrcodeEvent.getSecretCode())
                         .entryStartAt(qrcodeEvent.getEntryStartAt())
                         .entryEndAt(qrcodeEvent.getEntryEndAt())
                         .build();
@@ -141,22 +158,30 @@ public class QrcodeEventDto {
         @AllArgsConstructor
         public static class QrcodeDesignInfo {
             private UUID id;
-            private String topText;
-            private String bottomText;
-            private String centerText;
-            private Integer topFontSize;
-            private Integer bottomFontSize;
-            private Integer borderThickness;
+            private String errorCorrectionLevel;
+            private Boolean includeMargin;
+            private String backgroundColor;
+            private String pointColor;
+            private Integer size;
+            private String dotType;
+            private Integer logoVisualSize;
+            private Double logoVisualRatio;
+            private UUID logoImageId;
 
             public static QrcodeDesignInfo fromEntity(QrcodeDesign qrcodeDesign) {
+                UUID logoImageId = qrcodeDesign.getLogoImage() != null ? qrcodeDesign.getLogoImage().getId() : null;
+
                 return QrcodeDesignInfo.builder()
                         .id(qrcodeDesign.getId())
-                        .topText(qrcodeDesign.getTopText())
-                        .bottomText(qrcodeDesign.getBottomText())
-                        .centerText(qrcodeDesign.getCenterText())
-                        .topFontSize(qrcodeDesign.getTopFontSize())
-                        .bottomFontSize(qrcodeDesign.getBottomFontSize())
-                        .borderThickness(qrcodeDesign.getBorderThickness())
+                        .errorCorrectionLevel(qrcodeDesign.getErrorCorrectionLevel())
+                        .includeMargin(qrcodeDesign.getIncludeMargin())
+                        .backgroundColor(qrcodeDesign.getBackgroundColor())
+                        .pointColor(qrcodeDesign.getPointColor())
+                        .size(qrcodeDesign.getSize())
+                        .dotType(qrcodeDesign.getDotType())
+                        .logoVisualSize(qrcodeDesign.getLogoVisualSize())
+                        .logoVisualRatio(qrcodeDesign.getLogoVisualRatio())
+                        .logoImageId(logoImageId)
                         .build();
             }
         }

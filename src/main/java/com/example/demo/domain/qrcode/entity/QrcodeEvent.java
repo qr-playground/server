@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.example.demo.domain.guestbook.entity.Guestbook;
 import com.example.demo.domain.user.entity.User;
 
@@ -15,7 +16,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "qrcode")
+@Table(name = "qrcode_event", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "short_id" })
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QrcodeEvent {
@@ -24,6 +27,9 @@ public class QrcodeEvent {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
+
+    @Column(name = "short_id", nullable = false, unique = true, updatable = false, length = 12)
+    private String shortId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -38,8 +44,8 @@ public class QrcodeEvent {
     @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "group_code", nullable = true)
-    private String groupCode;
+    @Column(name = "secret_code", nullable = true)
+    private String secretCode;
 
     @Column(name = "entry_start_at", columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime entryStartAt;
@@ -59,10 +65,17 @@ public class QrcodeEvent {
     @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL)
     private QrcodeDesign qrcodeDesign;
 
+    // shortId 대문자 알파벳
+    private static final char[] UPPERCASE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        shortId = NanoIdUtils.randomNanoId(
+                NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
+                UPPERCASE_ALPHABET,
+                12);
     }
 
     @PreUpdate
@@ -71,12 +84,12 @@ public class QrcodeEvent {
     }
 
     @Builder
-    public QrcodeEvent(User user, String title, String description, String groupCode,
+    public QrcodeEvent(User user, String title, String description, String secretCode,
             LocalDateTime entryStartAt, LocalDateTime entryEndAt) {
         this.user = user;
         this.title = title;
         this.description = description;
-        this.groupCode = groupCode;
+        this.secretCode = secretCode;
         this.entryStartAt = entryStartAt;
         this.entryEndAt = entryEndAt;
         this.isDeleted = false;

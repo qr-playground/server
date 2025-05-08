@@ -3,6 +3,8 @@ package com.example.demo.domain.qrcode.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.example.demo.domain.image.entity.Image;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,23 +26,34 @@ public class QrcodeDesign {
     @JoinColumn(name = "qrcode_event_id", nullable = false)
     private QrcodeEvent qrcodeEvent;
 
-    @Column(name = "top_text", nullable = true)
-    private String topText;
+    @Column(name = "error_correction_level", nullable = false)
+    private String errorCorrectionLevel;
 
-    @Column(name = "bottom_text", nullable = true)
-    private String bottomText;
+    @Column(name = "include_margin", nullable = false)
+    private Boolean includeMargin;
 
-    @Column(name = "center_text", nullable = true)
-    private String centerText;
+    @Column(name = "background_color", nullable = false)
+    private String backgroundColor;
 
-    @Column(name = "top_font_size", nullable = true)
-    private Integer topFontSize;
+    @Column(name = "point_color", nullable = false)
+    private String pointColor;
 
-    @Column(name = "bottom_font_size", nullable = true)
-    private Integer bottomFontSize;
+    @Column(name = "size", nullable = false)
+    private Integer size;
 
-    @Column(name = "border_thickness", nullable = true)
-    private Integer borderThickness;
+    @Column(name = "dot_type", nullable = false)
+    private String dotType;
+
+    // 로고 이미지 관련 정보는 nullable 처리
+    @OneToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "image_id", nullable = true)
+    private Image logoImage;
+
+    @Column(name = "logo_visual_size", nullable = true)
+    private Integer logoVisualSize;
+
+    @Column(name = "logo_visual_ratio", nullable = true)
+    private Double logoVisualRatio;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime createdAt;
@@ -59,16 +72,28 @@ public class QrcodeDesign {
         updatedAt = LocalDateTime.now();
     }
 
+    // @Builder 어노테이션 사용 시 모든 필드가 optional 처리되어 빌더 패턴 사용
     @Builder
-    public QrcodeDesign(QrcodeEvent qrcodeEvent, String topText, String bottomText,
-            String centerText, Integer topFontSize, Integer bottomFontSize,
-            Integer borderThickness) {
+    public QrcodeDesign(
+            QrcodeEvent qrcodeEvent,
+            String errorCorrectionLevel,
+            Boolean includeMargin,
+            String backgroundColor,
+            String pointColor,
+            Integer size,
+            String dotType,
+            Image logoImage,
+            Integer logoVisualSize,
+            Double logoVisualRatio) {
         this.qrcodeEvent = qrcodeEvent;
-        this.topText = topText;
-        this.bottomText = bottomText;
-        this.centerText = centerText;
-        this.topFontSize = topFontSize;
-        this.bottomFontSize = bottomFontSize;
-        this.borderThickness = borderThickness;
+        this.errorCorrectionLevel = errorCorrectionLevel;
+        this.includeMargin = includeMargin;
+        this.backgroundColor = backgroundColor;
+        this.pointColor = pointColor;
+        this.size = size;
+        this.dotType = dotType;
+        this.logoImage = logoImage;
+        this.logoVisualSize = logoVisualSize;
+        this.logoVisualRatio = logoVisualRatio;
     }
 }

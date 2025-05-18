@@ -10,6 +10,7 @@ import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import com.example.demo.domain.user.entity.Role;
 import com.example.demo.domain.user.entity.User;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class UserDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
+    @Schema(name = "UserResponse", description = "사용자 조회 응답 정보")
     public static class Response {
         private UUID id;
         private String phoneNumber;
@@ -38,17 +40,6 @@ public class UserDto {
                     .role(user.getRole())
                     .createdAt(user.getCreatedAt())
                     .updatedAt(user.getUpdatedAt())
-                    .build();
-        }
-
-        public static Response fromEntity(User user, List<QrcodeEvent> qrcodeEvents) {
-            return Response.builder()
-                    .id(user.getId())
-                    .phoneNumber(user.getPhoneNumber())
-                    .role(user.getRole())
-                    .createdAt(user.getCreatedAt())
-                    .updatedAt(user.getUpdatedAt())
-                    .qrcodeInfos(qrcodeEvents.stream().map(QrcodeInfo::fromEntity).collect(Collectors.toList()))
                     .build();
         }
     }

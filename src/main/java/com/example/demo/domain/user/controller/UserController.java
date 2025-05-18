@@ -25,9 +25,4 @@ public class UserController {
     public ResponseEntity<UserDto.Response> getMe(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.ok(userService.getUser(userDetails.getUser().getId()));
     }
-
-    @GetMapping("/me/qrcode")
-    public ResponseEntity<UserDto.Response> getMeWithQrcodes(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return ResponseEntity.ok(userService.getUserWithQrcodes(userDetails.getUser().getId()));
-    }
 }

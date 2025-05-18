@@ -51,7 +51,7 @@ public class ImageService {
     }
 
     /**
-     * 🔒 Internal API — 컨트롤러에서 직접 호출하지 마세요.
+     * ! 🔒 Internal API — 컨트롤러에서 직접 호출하지 마세요.
      *
      * @param imageId 조회할 이미지의 UUID
      * @return 찾은 Image 엔티티 (없으면 예외 발생)

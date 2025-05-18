@@ -94,4 +94,18 @@ public class QrcodeEvent {
         this.entryEndAt = entryEndAt;
         this.isDeleted = false;
     }
+
+    /**
+     * QR 코드 이벤트 종료 시간 업데이트
+     */
+    public void terminate() {
+        this.entryEndAt = LocalDateTime.now();
+    }
+
+    /**
+     * QR 코드 이벤트 삭제
+     */
+    public void delete() {
+        this.isDeleted = true;
+    }
 }

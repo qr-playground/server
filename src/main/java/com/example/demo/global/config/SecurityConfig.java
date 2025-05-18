@@ -71,6 +71,7 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/users").authenticated()
                                                 .requestMatchers("/api/qrcode/event").authenticated()
+                                                .requestMatchers("/api/qrcode/{shortId}/").permitAll()
                                                 // 인증 없이 접근 가능한 경로
                                                 .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**")
                                                 .permitAll()

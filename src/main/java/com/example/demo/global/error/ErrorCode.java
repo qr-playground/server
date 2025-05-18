@@ -54,6 +54,16 @@ public enum ErrorCode {
     IMAGE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "E4004", "접근 권한이 없습니다"),
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "E4005", "엔티티를 찾을 수 없습니다"),
     IMAGE_S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E4006", "S3 업로드 실패"),
+            
+
+    // GUESTBOOK 관련 에러 5000 ~ 5999 --------------------------------
+    GUESTBOOK_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E5000", "방명록 오류가 발생했습니다"),
+    GUESTBOOK_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "E5001", "잘못된 입력값입니다"),
+    GUESTBOOK_INVALID_TYPE_VALUE(HttpStatus.BAD_REQUEST, "E5002", "잘못된 타입입니다"),
+    GUESTBOOK_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "E5003", "인증에 실패했습니다"),
+    GUESTBOOK_ACCESS_DENIED(HttpStatus.FORBIDDEN, "E5004", "접근 권한이 없습니다"),
+    GUESTBOOK_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E5005", "엔티티를 찾을 수 없습니다"),
+    GUESTBOOK_QRCODE_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, "E5006", "QR 코드 이벤트를 찾을 수 없습니다"),
     
     // 예외 처리 범위 초과 --------------------------------
     OUT_OF_RANGE_ERROR(HttpStatus.BAD_REQUEST, "E100000", "예외 처리 오류 코드 범위 초과");

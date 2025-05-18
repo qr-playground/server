@@ -1,13 +1,16 @@
 package com.example.demo.domain.qrcode.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.example.demo.domain.image.entity.Image;
 import com.example.demo.domain.qrcode.entity.QrcodeDesign;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import com.example.demo.domain.user.entity.User;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +22,7 @@ public class QrcodeEventDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(name = "QrcodeEventCreateRequest", description = "QR 코드 이벤트 생성 요청 정보")
     public static class Create {
 
         // QrcodeEvent 정보
@@ -86,6 +90,7 @@ public class QrcodeEventDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(name = "QrcodeEventResponse", description = "QR 코드 이벤트 조회 응답 정보")
     public static class Response {
 
         private QrcodeInfo qrcodeInfo;
@@ -184,6 +189,36 @@ public class QrcodeEventDto {
                         .logoImageId(logoImageId)
                         .build();
             }
+        }
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(name = "QrcodeEventListResponse", description = "QR 코드 이벤트 목록 조회 응답 정보")
+    public static class ListResponse {
+        private List<Response.QrcodeInfo> qrcodeInfos;
+        private PaginationInfo pagination;
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class PaginationInfo {
+            private long totalItems;
+            private int totalPages;
+            private int currentPage;
+            private int pageSize;
+        }
+
+        public static ListResponse fromEntity(List<QrcodeEvent> qrcodeEvents, PaginationInfo paginationInfo) {
+            return ListResponse.builder()
+                    .qrcodeInfos(qrcodeEvents.stream()
+                            .map(Response.QrcodeInfo::fromEntity)
+                            .collect(Collectors.toList()))
+                    .pagination(paginationInfo)
+                    .build();
         }
     }
 

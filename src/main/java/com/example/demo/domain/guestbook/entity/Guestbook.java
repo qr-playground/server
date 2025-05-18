@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "guestbook", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "qrcode_event_short_id", "device_id" })
+        @UniqueConstraint(columnNames = { "short_id", "device_id" })
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -25,7 +25,7 @@ public class Guestbook {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "qrcode_event_short_id", referencedColumnName = "short_id", nullable = false)
+    @JoinColumn(name = "short_id", nullable = false)
     private QrcodeEvent qrcodeEvent;
 
     @Column(name = "device_id", nullable = false)

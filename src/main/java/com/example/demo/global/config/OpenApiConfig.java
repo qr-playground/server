@@ -115,7 +115,7 @@ public class OpenApiConfig {
                             .in(ParameterIn.HEADER.toString())
                             .name("Authorization")
                             .description("JWT Token (Bearer 토큰)")
-                            .required(false)
+                            .required(true)
                             .schema(new io.swagger.v3.oas.models.media.StringSchema()));
             return operation;
         };

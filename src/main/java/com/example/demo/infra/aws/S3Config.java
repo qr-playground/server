@@ -25,8 +25,6 @@ public class S3Config {
     @Bean
     public S3Client s3Client() {
 
-        log.info("S3 업로드 시작: accessKey={}, secretKey={}, region={}", accessKey, secretKey, region);
-
         return S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(

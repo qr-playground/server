@@ -28,13 +28,4 @@ public class UserService {
         return UserDto.Response.fromEntity(userRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND)));
     }
-
-    @Transactional(readOnly = true)
-    public UserDto.Response getUserWithQrcodes(UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        List<QrcodeEvent> qrcodeEvents = user.getQrcodeEvents();
-        return UserDto.Response.fromEntity(user, qrcodeEvents);
-    }
 }

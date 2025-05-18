@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.domain.image.entity.Image;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class ImageDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
+    @Schema(name = "ImageCreateRequest", description = "이미지 생성 요청 정보")
     public static class Create {
         private MultipartFile image;
 
@@ -34,6 +36,7 @@ public class ImageDto {
     @AllArgsConstructor
     @NoArgsConstructor
     @Builder
+    @Schema(name = "ImageResponse", description = "이미지 조회 응답 정보")
     public static class Response {
         private UUID id;
         private String url;

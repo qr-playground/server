@@ -33,12 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         // 토큰이 존재하고 유효한 경우 인증 정보 설정
-        if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
+        if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt) == JwtTokenStatus.VALID) {
             Authentication authentication = jwtTokenProvider.getAuthentication(jwt);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.debug("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}", authentication.getName(), requestURI);
         } else {
-            log.debug("유효한 JWT 토큰이 없습니다, uri: {}", requestURI);
+            log.debug("유효한 JWT 토큰이 없습123니다, uri: {}", requestURI);
             SecurityContextHolder.clearContext();
             // 필터에서 예외를 던지지 않고, SpringSecurity가 인증되지 않은 접근을 처리하도록 함
             // SecurityConfig에 설정된 authenticationEntryPoint가 401 응답을 반환함

@@ -28,6 +28,7 @@ public enum ErrorCode {
     AUTH_DUPLICATE_USER(HttpStatus.CONFLICT, "E1006", "이미 가입된 사용자입니다"),
     AUTH_NOT_FOUND_USER(HttpStatus.NOT_FOUND, "E1007", "존재하지 않는 사용자입니다"),
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "E1008", "비밀번호가 일치하지 않습니다"),
+    AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "E1009", "리프레시 토큰이 유효하지 않습니다"),
 
     // QR 관련 에러 2000 ~ 2999 --------------------------------
     QRCODE_EVENT_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E2000", "QR 오류가 발생했습니다"),

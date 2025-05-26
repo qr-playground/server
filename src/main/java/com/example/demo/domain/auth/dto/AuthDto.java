@@ -49,6 +49,14 @@ public class AuthDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class Refresh {
+        private String refreshToken;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Response {
 
         private UserInfo userInfo;
@@ -63,6 +71,12 @@ public class AuthDto {
         public static Response fromEntity(User user, TokenDto tokenDto) {
             return Response.builder()
                     .userInfo(UserInfo.fromEntity(user))
+                    .tokenInfo(TokenInfo.fromDto(tokenDto))
+                    .build();
+        }
+
+        public static Response fromEntity(TokenDto tokenDto) {
+            return Response.builder()
                     .tokenInfo(TokenInfo.fromDto(tokenDto))
                     .build();
         }

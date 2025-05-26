@@ -41,4 +41,9 @@ public class AuthController {
     public ResponseEntity<AuthDto.Response> login(@Valid @RequestBody AuthDto.Login requestDto) {
         return ResponseEntity.ok(authService.login(requestDto));
     }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthDto.Response> refresh(@Valid @RequestBody AuthDto.Refresh requestDto) {
+        return ResponseEntity.ok(authService.refresh(requestDto));
+    }
 }

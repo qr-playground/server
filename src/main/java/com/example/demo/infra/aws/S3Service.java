@@ -34,7 +34,6 @@ public class S3Service {
      * @param contentType — MIME 타입
      */
     public String upload(String key, InputStream data, long size, String contentType) {
-        log.info("S3 업로드 시작: key={}, size={}, contentType={}", key, size, contentType);
         PutObjectRequest req = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)

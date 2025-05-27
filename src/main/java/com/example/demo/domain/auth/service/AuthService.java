@@ -20,6 +20,7 @@ import com.example.demo.domain.auth.entity.RefreshToken;
 import com.example.demo.domain.auth.repository.RefreshTokenRepository;
 import com.example.demo.domain.user.entity.User;
 import com.example.demo.domain.user.repository.UserRepository;
+import com.example.demo.domain.user.service.UserService;
 import com.example.demo.global.error.ErrorCode;
 import com.example.demo.global.error.exception.CustomException;
 import com.example.demo.global.security.jwt.JwtProperties;
@@ -35,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -49,7 +50,7 @@ public class AuthService {
     @Transactional
     public AuthDto.Response signup(AuthDto.Signup requestDto) {
 
-        Optional<User> user = userRepository.findByPhoneNumber(requestDto.getPhoneNumber());
+        Optional<User> user = userService.getUserByPhoneNumber(requestDto.getPhoneNumber());
 
         // 이미 가입된 사용자인지 확인
         if (user.isPresent()) {
@@ -60,7 +61,7 @@ public class AuthService {
         User newUser = requestDto.toEntity(passwordEncoder.encode(requestDto.getPassword()));
 
         // 저장 및 응답 변환
-        return AuthDto.Response.fromEntity(userRepository.save(newUser));
+        return AuthDto.Response.fromEntity(userService.createUser(newUser));
     }
 
     /**
@@ -109,30 +110,37 @@ public class AuthService {
         return AuthDto.Response.fromEntity(user, tokenDto);
     }
 
+    // TODO: RTR 도입 시 트랜잭션 처리 필요
     @Transactional(readOnly = true)
     public AuthDto.Response refresh(AuthDto.Refresh requestDto) {
+
         JwtTokenStatus status = jwtTokenProvider.validateToken(requestDto.getRefreshToken());
-        // 올바른 리프레시 토큰 또는 만료된 리프레시 토큰
+        // 올바른 리프레시 토큰만 통과, 만료된 리프레시 토큰 -> status != JwtTokenStatus.EXPIRED
         // 재로그인 요청
-        if (status != JwtTokenStatus.VALID && status != JwtTokenStatus.EXPIRED) {
+        if (status != JwtTokenStatus.VALID) {
             throw new CustomException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
         }
 
-        // 존재하지 않는 리프레시 토큰
-        Optional<RefreshToken> refreshToken = refreshTokenRepository
-                .findByRefreshTokenAndIsRevokedFalse(requestDto.getRefreshToken());
-        if (refreshToken.isEmpty()) {
+        // 존재하지 않는 리프레시 토큰 -> RTR 도입시 주석 해제
+        // Optional<RefreshToken> refreshToken = refreshTokenRepository
+        //         .findByRefreshTokenAndIsRevokedFalse(requestDto.getRefreshToken());
+        // if (refreshToken.isEmpty()) {
+        //     throw new CustomException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
+        // }
+
+        String phoneNumber = jwtTokenProvider.getUsernameFromToken(requestDto.getRefreshToken());
+
+        Optional<User> user = userService.getUserByPhoneNumber(phoneNumber);
+
+        if (user.isEmpty()) {
             throw new CustomException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
         }
 
-        User user = refreshToken.get().getUser();
-        
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getPhoneNumber(), // principal
-                null, // credentials (필요 없음)
-                List.of(new SimpleGrantedAuthority(user.getRole().name())) // 권한
-        );
-        
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.get().getRole().name()));
+        CustomUserDetails userDetails = new CustomUserDetails(user.get());
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+
         String accessToken = jwtTokenProvider.createToken(authentication);
         return AuthDto.Response.fromEntity(TokenDto.builder()
                 .grantType(jwtProperties.getGrantType())

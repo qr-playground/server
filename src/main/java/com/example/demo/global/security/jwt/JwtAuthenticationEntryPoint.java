@@ -35,12 +35,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         log.error("인증 실패: {}", authException.getMessage());
 
         // 인증 실패 응답 설정
-        response.setStatus(ErrorCode.AUTH_UNAUTHORIZED.getStatus().value());
+        response.setStatus(ErrorCode.COMMON_UNAUTHORIZED.getStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         // 공통 에러 응답 형식 사용
         ErrorResponse errorResponse = ErrorResponse.of(
-                ErrorCode.AUTH_UNAUTHORIZED,
+                ErrorCode.COMMON_UNAUTHORIZED,
                 request.getRequestURI());
 
         // JSON 형태로 변환하여 응답

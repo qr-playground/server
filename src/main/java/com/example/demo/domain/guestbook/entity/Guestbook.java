@@ -25,7 +25,7 @@ public class Guestbook {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "short_id", nullable = false)
+    @JoinColumn(name = "short_id", nullable = false, referencedColumnName = "short_id")
     private QrcodeEvent qrcodeEvent;
 
     @Column(name = "device_id", nullable = false)

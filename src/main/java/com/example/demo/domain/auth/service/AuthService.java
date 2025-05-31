@@ -1,6 +1,5 @@
 package com.example.demo.domain.auth.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -9,7 +8,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +17,6 @@ import com.example.demo.domain.auth.dto.TokenDto;
 import com.example.demo.domain.auth.entity.RefreshToken;
 import com.example.demo.domain.auth.repository.RefreshTokenRepository;
 import com.example.demo.domain.user.entity.User;
-import com.example.demo.domain.user.repository.UserRepository;
 import com.example.demo.domain.user.service.UserService;
 import com.example.demo.global.error.ErrorCode;
 import com.example.demo.global.error.exception.CustomException;
@@ -39,7 +36,6 @@ public class AuthService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtProperties jwtProperties;
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -73,6 +69,7 @@ public class AuthService {
         Authentication authentication;
 
         try {
+            AuthenticationManagerBuilder authenticationManagerBuilder = new AuthenticationManagerBuilder(null);
             // 1) 인증 시도: 내부적으로 UserDetailsService.loadUserByUsername → 한 번만 쿼리
             authentication = authenticationManagerBuilder.getObject()
                     .authenticate(
@@ -123,9 +120,9 @@ public class AuthService {
 
         // 존재하지 않는 리프레시 토큰 -> RTR 도입시 주석 해제
         // Optional<RefreshToken> refreshToken = refreshTokenRepository
-        //         .findByRefreshTokenAndIsRevokedFalse(requestDto.getRefreshToken());
+        // .findByRefreshTokenAndIsRevokedFalse(requestDto.getRefreshToken());
         // if (refreshToken.isEmpty()) {
-        //     throw new CustomException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
+        // throw new CustomException(ErrorCode.AUTH_INVALID_REFRESH_TOKEN);
         // }
 
         String phoneNumber = jwtTokenProvider.getUsernameFromToken(requestDto.getRefreshToken());

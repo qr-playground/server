@@ -37,6 +37,7 @@ public enum ErrorCode {
     QRCODE_EVENT_UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "E2003", "인증에 실패했습니다"),
     QRCODE_EVENT_ACCESS_DENIED(HttpStatus.FORBIDDEN, "E2004", "접근 권한이 없습니다"),
     QRCODE_EVENT_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E2005", "엔티티를 찾을 수 없습니다"),
+    QRCODE_EVENT_LOGO_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "E2006", "로고 이미지를 찾을 수 없습니다"),
 
     // USER 관련 에러 3000 ~ 3999 --------------------------------
     USER_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E3000", "사용자 오류가 발생했습니다"),
@@ -65,7 +66,8 @@ public enum ErrorCode {
     GUESTBOOK_ACCESS_DENIED(HttpStatus.FORBIDDEN, "E5004", "접근 권한이 없습니다"),
     GUESTBOOK_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E5005", "엔티티를 찾을 수 없습니다"),
     GUESTBOOK_QRCODE_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, "E5006", "QR 코드 이벤트를 찾을 수 없습니다"),
-    
+    GUESTBOOK_QRCODE_EVENT_ENTRY_ENDED(HttpStatus.BAD_REQUEST, "E5007", "QR 코드 이벤트 참여가 종료되었습니다"),
+
     // 예외 처리 범위 초과 --------------------------------
     OUT_OF_RANGE_ERROR(HttpStatus.BAD_REQUEST, "E100000", "예외 처리 오류 코드 범위 초과");
 

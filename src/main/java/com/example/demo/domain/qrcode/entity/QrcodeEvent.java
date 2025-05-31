@@ -53,6 +53,9 @@ public class QrcodeEvent {
     @Column(name = "entry_end_at", columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime entryEndAt;
 
+    @Column(name = "is_entry_ended", nullable = false)
+    private Boolean isEntryEnded;
+
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
 
@@ -65,22 +68,26 @@ public class QrcodeEvent {
     @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL)
     private QrcodeDesign qrcodeDesign;
 
+    @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL)
+    private QrcodeBenefit qrcodeBenefit;
+
     // shortId 대문자 알파벳
-    private static final char[] UPPERCASE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-    
+    private static final char[] ALPHANUMERIC_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
+
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        shortId = NanoIdUtils.randomNanoId(
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.shortId = NanoIdUtils.randomNanoId(
                 NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
-                UPPERCASE_ALPHABET,
+                ALPHANUMERIC_CHARACTERS,
                 12);
+        this.isEntryEnded = false;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     @Builder
@@ -92,6 +99,9 @@ public class QrcodeEvent {
         this.secretCode = secretCode;
         this.entryStartAt = entryStartAt;
         this.entryEndAt = entryEndAt;
+
+        // 기본값 설정
+        this.isEntryEnded = false;
         this.isDeleted = false;
     }
 
@@ -100,6 +110,7 @@ public class QrcodeEvent {
      */
     public void terminate() {
         this.entryEndAt = LocalDateTime.now();
+        this.isEntryEnded = true;
     }
 
     /**
@@ -107,5 +118,13 @@ public class QrcodeEvent {
      */
     public void delete() {
         this.isDeleted = true;
+    }
+
+    public void setQrcodeDesign(QrcodeDesign qrcodeDesign) {
+        this.qrcodeDesign = qrcodeDesign;
+    }
+
+    public void setQrcodeBenefit(QrcodeBenefit qrcodeBenefit) {
+        this.qrcodeBenefit = qrcodeBenefit;
     }
 }

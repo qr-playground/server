@@ -10,8 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.domain.guestbook.dto.GuestbookDto;
 import com.example.demo.domain.guestbook.entity.Guestbook;
 import com.example.demo.domain.guestbook.repository.GuestbookRepository;
+import com.example.demo.domain.qrcode.entity.QrcodeBenefit;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import com.example.demo.domain.qrcode.service.QrcodeEventService;
+import com.example.demo.global.error.ErrorCode;
+import com.example.demo.global.error.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +39,33 @@ public class GuestbookService {
         QrcodeEvent qrcodeEvent = qrcodeEventService.findByShortIdInternal(shortId);
 
         Guestbook guestbook = request.toEntity(qrcodeEvent);
+
+        QrcodeBenefit qrcodeBenefit = qrcodeEvent.getQrcodeBenefit();
+
+        // 참여가 가능한지 인원 체크 
+        if (qrcodeBenefit.getIsAttendeeCountLimited() && qrcodeBenefit.getAvailableAttendeeCount() <= 0) {
+            throw new CustomException(ErrorCode.GUESTBOOK_QRCODE_EVENT_ENTRY_ENDED);
+        }
+        // TODO: 동시성, 락 구현 
+        // 참여 인원 카운트 감소
+        qrcodeBenefit.decrementAvailableAttendeeCount();
+        if (qrcodeBenefit.getAvailableAttendeeCount() == 0) {
+            // 참여 인원 제한 여부 설정
+            qrcodeBenefit.setIsAttendeeCountLimited();
+        }
+
         Guestbook savedGuestbook = guestbookRepository.save(guestbook);
         return GuestbookDto.Response.fromEntity(savedGuestbook);
     }
 
+    /**
+     * 방명록 목록 조회
+     * 
+     * @param shortId QR 코드 단축 ID
+     * @param page 페이지 번호
+     * @param size 페이지 크기
+     * @return 방명록 목록 정보
+     */
     public GuestbookDto.ListResponse getGuestbooks(String shortId, int page, int size) {
         QrcodeEvent qrcodeEvent = qrcodeEventService.findByShortIdInternal(shortId);
         
@@ -47,12 +73,6 @@ public class GuestbookService {
         
         Page<Guestbook> guestbooks = guestbookRepository.findAllByQrcodeEvent(qrcodeEvent, pageable);
         
-        return GuestbookDto.ListResponse.fromEntity(guestbooks.getContent(),
-                GuestbookDto.ListResponse.PaginationInfo.builder()
-                        .totalItems(guestbooks.getTotalElements())
-                        .totalPages(guestbooks.getTotalPages())
-                        .currentPage(guestbooks.getNumber())
-                        .pageSize(guestbooks.getSize())
-                        .build());
+        return GuestbookDto.ListResponse.fromEntity(guestbooks);
     }
 }

@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+
 import com.example.demo.domain.image.entity.Image;
+import com.example.demo.domain.qrcode.entity.QrcodeBenefit;
 import com.example.demo.domain.qrcode.entity.QrcodeDesign;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import com.example.demo.domain.user.entity.User;
@@ -45,7 +48,10 @@ public class QrcodeEventDto {
         private Double logoVisualRatio;
         private UUID logoImageId;
 
-        public QrcodeEvent toEntity(User user) {
+        // QrcodeBenefit 정보
+        private Integer maxAttendeeCount;
+
+        public QrcodeEvent toQrcodeEventEntity(User user) {
             return QrcodeEvent.builder()
                     .user(user)
                     .title(title)
@@ -57,7 +63,7 @@ public class QrcodeEventDto {
         }
 
         // 로고 이미지 있는 경우
-        public QrcodeDesign toEntity(QrcodeEvent qrcodeEvent, Image logoImage) {
+        public QrcodeDesign toQrcodeDesignEntity(QrcodeEvent qrcodeEvent, Image logoImage) {
             return QrcodeDesign.builder()
                     .qrcodeEvent(qrcodeEvent)
                     .errorCorrectionLevel(errorCorrectionLevel)
@@ -73,7 +79,7 @@ public class QrcodeEventDto {
         }
 
         // 로고 이미지 없는 경우
-        public QrcodeDesign toEntity(QrcodeEvent qrcodeEvent) {
+        public QrcodeDesign toQrcodeDesignEntity(QrcodeEvent qrcodeEvent) {
             return QrcodeDesign.builder()
                     .qrcodeEvent(qrcodeEvent)
                     .errorCorrectionLevel(errorCorrectionLevel)
@@ -82,6 +88,13 @@ public class QrcodeEventDto {
                     .pointColor(pointColor)
                     .size(size)
                     .dotType(dotType)
+                    .build();
+        }
+
+        public QrcodeBenefit toQrcodeBenefitEntity(QrcodeEvent qrcodeEvent) {
+            return QrcodeBenefit.builder()
+                    .qrcodeEvent(qrcodeEvent)
+                    .maxAttendeeCount(maxAttendeeCount)
                     .build();
         }
     }
@@ -94,12 +107,6 @@ public class QrcodeEventDto {
     public static class Response {
 
         private QrcodeInfo qrcodeInfo;
-
-        public static Response fromEntity(QrcodeEvent qrcodeEvent, QrcodeDesign qrcodeDesign) {
-            return Response.builder()
-                    .qrcodeInfo(QrcodeInfo.fromEntity(qrcodeEvent, qrcodeDesign))
-                    .build();
-        }
 
         public static Response fromEntity(QrcodeEvent qrcodeEvent) {
             return Response.builder()
@@ -114,19 +121,13 @@ public class QrcodeEventDto {
         public static class QrcodeInfo {
             private QrcodeEventInfo qrcodeEventInfo;
             private QrcodeDesignInfo qrcodeDesignInfo;
-
-            public static QrcodeInfo fromEntity(QrcodeEvent qrcodeEvent, QrcodeDesign qrcodeDesign) {
-
-                return QrcodeInfo.builder()
-                        .qrcodeEventInfo(QrcodeEventInfo.fromEntity(qrcodeEvent))
-                        .qrcodeDesignInfo(QrcodeDesignInfo.fromEntity(qrcodeDesign))
-                        .build();
-            }
+            private QrcodeBenefitInfo qrcodeBenefitInfo;
 
             public static QrcodeInfo fromEntity(QrcodeEvent qrcodeEvent) {
                 return QrcodeInfo.builder()
                         .qrcodeEventInfo(QrcodeEventInfo.fromEntity(qrcodeEvent))
                         .qrcodeDesignInfo(QrcodeDesignInfo.fromEntity(qrcodeEvent.getQrcodeDesign()))
+                        .qrcodeBenefitInfo(QrcodeBenefitInfo.fromEntity(qrcodeEvent.getQrcodeBenefit()))
                         .build();
             }
         }
@@ -143,6 +144,7 @@ public class QrcodeEventDto {
             private String secretCode;
             private LocalDateTime entryStartAt;
             private LocalDateTime entryEndAt;
+            private Boolean isEntryEnded;
 
             public static QrcodeEventInfo fromEntity(QrcodeEvent qrcodeEvent) {
                 return QrcodeEventInfo.builder()
@@ -153,6 +155,7 @@ public class QrcodeEventDto {
                         .secretCode(qrcodeEvent.getSecretCode())
                         .entryStartAt(qrcodeEvent.getEntryStartAt())
                         .entryEndAt(qrcodeEvent.getEntryEndAt())
+                        .isEntryEnded(qrcodeEvent.getIsEntryEnded())
                         .build();
             }
         }
@@ -190,6 +193,26 @@ public class QrcodeEventDto {
                         .build();
             }
         }
+
+        @Data
+        @Builder
+        @NoArgsConstructor
+        @AllArgsConstructor
+        public static class QrcodeBenefitInfo {
+            private UUID id;
+            private Integer maxAttendeeCount;
+            private Integer availableAttendeeCount;
+            private Boolean isAttendeeCountLimited;
+
+            public static QrcodeBenefitInfo fromEntity(QrcodeBenefit qrcodeBenefit) {
+                return QrcodeBenefitInfo.builder()
+                        .id(qrcodeBenefit.getId())
+                        .maxAttendeeCount(qrcodeBenefit.getMaxAttendeeCount())
+                        .availableAttendeeCount(qrcodeBenefit.getAvailableAttendeeCount())
+                        .isAttendeeCountLimited(qrcodeBenefit.getIsAttendeeCountLimited())
+                        .build();
+            }
+        }
     }
 
     @Data
@@ -210,14 +233,23 @@ public class QrcodeEventDto {
             private int totalPages;
             private int currentPage;
             private int pageSize;
+
+            public static PaginationInfo fromEntity(Page<QrcodeEvent> qrcodeEvents) {
+                return PaginationInfo.builder()
+                        .totalItems(qrcodeEvents.getTotalElements())
+                        .totalPages(qrcodeEvents.getTotalPages())
+                        .currentPage(qrcodeEvents.getNumber())
+                        .pageSize(qrcodeEvents.getSize())
+                        .build();
+            }
         }
 
-        public static ListResponse fromEntity(List<QrcodeEvent> qrcodeEvents, PaginationInfo paginationInfo) {
+        public static ListResponse fromEntity(Page<QrcodeEvent> qrcodeEvents) {
             return ListResponse.builder()
                     .qrcodeInfos(qrcodeEvents.stream()
                             .map(Response.QrcodeInfo::fromEntity)
                             .collect(Collectors.toList()))
-                    .pagination(paginationInfo)
+                    .pagination(PaginationInfo.fromEntity(qrcodeEvents))
                     .build();
         }
     }

@@ -68,7 +68,8 @@ public class QrcodeEventController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        QrcodeEventDto.ListResponse response = qrcodeEventService.getUserQrcodeEvents(userDetails.getUser(), page, size);
+        QrcodeEventDto.ListResponse response = qrcodeEventService.getUserQrcodeEvents(userDetails.getUser(), page,
+                size);
         return ResponseEntity.ok(response);
     }
 

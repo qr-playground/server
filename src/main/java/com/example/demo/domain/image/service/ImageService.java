@@ -1,6 +1,7 @@
 package com.example.demo.domain.image.service;
 
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -57,13 +58,13 @@ public class ImageService {
      * @return 찾은 Image 엔티티 (없으면 예외 발생)
      * @throws CustomException IMAGE_NOT_FOUND
      */
-    public Image findByIdInternal(UUID id) {
-        return imageRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.IMAGE_NOT_FOUND));
+    public Optional<Image> findByIdInternal(UUID id) {
+        return imageRepository.findById(id);
     }
 
     public ImageDto.Response findById(UUID id) {
-        Image image = findByIdInternal(id);
+        Image image = findByIdInternal(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.IMAGE_NOT_FOUND));
         return ImageDto.Response.fromEntity(image);
     }
 }

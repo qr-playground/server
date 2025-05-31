@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+
 import com.example.demo.domain.guestbook.entity.Guestbook;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 
@@ -47,6 +49,9 @@ public class GuestbookDto {
         private String phoneNumber;
         private LocalDateTime createdAt;
         private String shortId;
+        private Integer maxAttendeeCount;
+        private Integer availableAttendeeCount;
+        private Boolean isAttendeeCountLimited;
 
         public static Response fromEntity(Guestbook guestbook) {
             return Response.builder()
@@ -55,6 +60,9 @@ public class GuestbookDto {
                     .phoneNumber(guestbook.getPhoneNumber())
                     .createdAt(guestbook.getCreatedAt())
                     .shortId(guestbook.getQrcodeEvent().getShortId())
+                    .maxAttendeeCount(guestbook.getQrcodeEvent().getQrcodeBenefit().getMaxAttendeeCount())
+                    .availableAttendeeCount(guestbook.getQrcodeEvent().getQrcodeBenefit().getAvailableAttendeeCount())
+                    .isAttendeeCountLimited(guestbook.getQrcodeEvent().getQrcodeBenefit().getIsAttendeeCountLimited())
                     .build();
         }
     }
@@ -79,12 +87,17 @@ public class GuestbookDto {
             private int pageSize;
         }
 
-        public static ListResponse fromEntity(List<Guestbook> guestbooks, PaginationInfo paginationInfo) {
+        public static ListResponse fromEntity(Page<Guestbook> guestbooks) {
             return ListResponse.builder()
                     .guestbooks(guestbooks.stream()
                             .map(Response::fromEntity)
                             .collect(Collectors.toList()))
-                    .pagination(paginationInfo)
+                    .pagination(PaginationInfo.builder()
+                            .totalItems(guestbooks.getTotalElements())
+                            .totalPages(guestbooks.getTotalPages())
+                            .currentPage(guestbooks.getNumber())
+                            .pageSize(guestbooks.getSize())
+                            .build())
                     .build();
         }
     }

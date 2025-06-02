@@ -62,13 +62,11 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                                // 인증/권한 예외 처리 구성
-                                .exceptionHandling(handling -> handling
-                                                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                                                .accessDeniedHandler(jwtAccessDeniedHandler))
+                                
 
                                 // 요청에 대한 인가 규칙 설정
                                 .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers("/actuator/**").permitAll()
                                                 .requestMatchers("/api/users").authenticated()
                                                 .requestMatchers("/api/qrcode/event").authenticated()
                                                 .requestMatchers("/api/qrcode/{shortId}/").permitAll()
@@ -78,8 +76,12 @@ public class SecurityConfig {
                                                 // 관리자 권한 필요
                                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                                 .requestMatchers("/api/image/**").authenticated()
-                                                // 그 외 모든 요청은 인증 필요
                                                 .anyRequest().permitAll())
+
+                                // 인증/권한 예외 처리 구성
+                                .exceptionHandling(handling -> handling
+                                                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                                                .accessDeniedHandler(jwtAccessDeniedHandler))
 
                                 // 폼 로그인 비활성화 (JWT 사용)
                                 .formLogin(AbstractHttpConfigurer::disable)

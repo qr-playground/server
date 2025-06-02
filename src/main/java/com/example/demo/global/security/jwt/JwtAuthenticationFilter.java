@@ -1,6 +1,7 @@
 package com.example.demo.global.security.jwt;
 
 import java.io.IOException;
+import java.util.Set;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Set<String> EXCLUDE_URI_PREFIXES = Set.of(
+            "/actuator", "/swagger-ui", "/v3/api-docs");
+            
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
 
@@ -28,9 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String requestURI = request.getRequestURI();
+        log.info("requestURI: {}", requestURI);
+        if (EXCLUDE_URI_PREFIXES.stream().anyMatch(requestURI::startsWith)) {
+            return;
+        }
+
         // 요청에서 JWT 토큰 추출
         String jwt = resolveToken(request);
-        String requestURI = request.getRequestURI();
 
         // 토큰이 존재하고 유효한 경우 인증 정보 설정
         if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt) == JwtTokenStatus.VALID) {

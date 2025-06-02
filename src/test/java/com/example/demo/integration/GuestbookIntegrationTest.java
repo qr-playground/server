@@ -15,13 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.domain.guestbook.dto.GuestbookDto;
 import com.example.demo.domain.guestbook.repository.GuestbookRepository;
 import com.example.demo.domain.guestbook.service.GuestbookService;
 import com.example.demo.domain.qrcode.dto.QrcodeEventDto;
-import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import com.example.demo.domain.qrcode.repository.QrcodeEventRepository;
 import com.example.demo.domain.qrcode.service.QrcodeEventService;
 import com.example.demo.domain.user.entity.Role;

@@ -39,3 +39,14 @@ out/
 ### environment settings ### 
 **/application-*.yaml
 !**/application-exam.yaml
+qrworld-key.*
+qrworld-key
+*.pem
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfvars
+.env

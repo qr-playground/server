@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -8,14 +8,14 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: local-docker
-      JAVA_OPTS: "-Xms256m -Xmx512m"  # JVM 힙 메모리 제한
+      JAVA_OPTS: "-Xms256m -Xmx512m" # JVM 힙 메모리 제한
     deploy:
       resources:
         limits:
-          cpus: '2'    # CPU 2코어로 제한
-          memory: 1G   # 전체 메모리 1GB로 제한
+          cpus: "2" # CPU 2코어로 제한
+          memory: 1G # 전체 메모리 1GB로 제한
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
     networks:
       - monitoring
@@ -36,7 +36,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
 
   grafana:
@@ -54,18 +54,16 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
 
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: postgres_exporter
     env_file:
-      - .env.local-docker
-    environment:
-      - DATA_SOURCE_NAME=${DATA_SOURCE_NAME}
+      - .env
     ports:
-      - "9187:9187"   # 내부 포트는 9187 그대로, 호스트 포트만 다르게 매핑
+      - "9187:9187" # 내부 포트는 9187 그대로, 호스트 포트만 다르게 매핑
     networks:
       - monitoring
 

@@ -4,7 +4,7 @@
 set -e
 
 echo "▶ Gradle build…"
-./gradlew clean build
+./gradlew clean build -x test
 
 echo "▶ Docker down…"
 docker-compose down

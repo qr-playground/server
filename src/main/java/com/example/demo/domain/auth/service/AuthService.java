@@ -3,9 +3,9 @@ package com.example.demo.domain.auth.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,6 +38,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthenticationManager authenticationManager;
 
     /**
      * 회원가입
@@ -69,17 +70,16 @@ public class AuthService {
         Authentication authentication;
 
         try {
-            AuthenticationManagerBuilder authenticationManagerBuilder = new AuthenticationManagerBuilder(null);
-            // 1) 인증 시도: 내부적으로 UserDetailsService.loadUserByUsername → 한 번만 쿼리
-            authentication = authenticationManagerBuilder.getObject()
-                    .authenticate(
-                            new UsernamePasswordAuthenticationToken(
-                                    requestDto.getPhoneNumber(),
-                                    requestDto.getPassword()));
+            authentication = authenticationManager.authenticate( // ← 빈 사용
+                    new UsernamePasswordAuthenticationToken(
+                            requestDto.getPhoneNumber(),
+                            requestDto.getPassword()));
+
         } catch (BadCredentialsException e) {
             // 비밀번호 불일치 또는 유저정보 없음
             throw new CustomException(ErrorCode.AUTH_INVALID_CREDENTIALS);
         } catch (Exception e) {
+            log.error("로그인 실패: {}", e.getMessage());
             throw new CustomException(ErrorCode.AUTH_NOT_FOUND_USER);
         }
 

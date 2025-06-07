@@ -86,7 +86,7 @@ public class QrcodeEventService {
     // @Transactional(readOnly = true)
     // ! 이 부분 페이지내이션 및 정렬 필터링 적용.
     public QrcodeEventDto.ListResponse getUserQrcodeEvents(User user, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "entryStartAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Page<QrcodeEvent> qrcodeEvents = qrcodeEventRepository.findAllByUserAndIsDeletedFalse(user, pageable);
         return QrcodeEventDto.ListResponse.fromEntity(qrcodeEvents);

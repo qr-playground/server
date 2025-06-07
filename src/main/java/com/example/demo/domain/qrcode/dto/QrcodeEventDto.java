@@ -142,6 +142,7 @@ public class QrcodeEventDto {
             private String title;
             private String description;
             private String secretCode;
+            private LocalDateTime createdAt;
             private LocalDateTime entryStartAt;
             private LocalDateTime entryEndAt;
             private Boolean isEntryEnded;
@@ -153,6 +154,7 @@ public class QrcodeEventDto {
                         .title(qrcodeEvent.getTitle())
                         .description(qrcodeEvent.getDescription())
                         .secretCode(qrcodeEvent.getSecretCode())
+                        .createdAt(qrcodeEvent.getCreatedAt())
                         .entryStartAt(qrcodeEvent.getEntryStartAt())
                         .entryEndAt(qrcodeEvent.getEntryEndAt())
                         .isEntryEnded(qrcodeEvent.getIsEntryEnded())

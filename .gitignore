@@ -42,6 +42,7 @@ out/
 qrworld-key.*
 qrworld-key
 *.pem
+application-local-docker.yaml
 
 # Terraform
 .terraform/
@@ -49,4 +50,6 @@ qrworld-key
 *.tfstate.*
 .terraform.lock.hcl
 terraform.tfvars
+.env.local-docker
+.env.local
 .env

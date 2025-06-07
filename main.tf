@@ -546,3 +546,124 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_agent" {
   role       = aws_iam_role.ec2_role.name
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 } 
+
+# Amplify가 S3, CloudFront, CloudWatch Logs 등에 접근할 수 있도록 IAM Role 생성
+resource "aws_iam_role" "amplify_service_role" {
+  name = "qrworld-amplify-service-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "amplify.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+# Amplify가 S3 Full Access
+resource "aws_iam_role_policy_attachment" "amplify_s3" {
+  role       = aws_iam_role.amplify_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+# Amplify가 CloudFront Full Access
+resource "aws_iam_role_policy_attachment" "amplify_cf" {
+  role       = aws_iam_role.amplify_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudFrontFullAccess"
+}
+
+# Amplify가 CloudWatch Logs Full Access
+resource "aws_iam_role_policy_attachment" "amplify_logs" {
+  role       = aws_iam_role.amplify_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
+}
+
+# Amplify가 필요한 IAM 관리 기능(Branch 생성 등)을 위해 IAM Full Access
+resource "aws_iam_role_policy_attachment" "amplify_iam" {
+  role       = aws_iam_role.amplify_service_role.name
+  policy_arn = "arn:aws:iam::aws:policy/IAMFullAccess"
+}
+
+# Amplify 앱 생성
+resource "aws_amplify_app" "front_app" {
+  name                 = "qr-playground-frontend"
+  repository           = "https://github.com/qr-playground/front"
+  oauth_token          = var.github_oauth_token
+  platform             = "WEB"
+  iam_service_role_arn = aws_iam_role.amplify_service_role.arn
+
+  default_branch = "develop"
+
+  environment_variables = {
+    VITE_API_BASE_URL = var.vite_api_base_url
+  }
+
+  build_spec = <<BUILD_SPEC
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - nvm install 20
+        - nvm use 20
+        - npm ci --cache .npm --prefer-offline
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - .npm/**/*
+BUILD_SPEC
+
+  tags = {
+    Project = "qr-world"
+    Env     = "develop"
+  }
+}
+
+# Amplify 브랜치 설정 (develop)
+resource "aws_amplify_branch" "front_develop" {
+  app_id            = aws_amplify_app.front_app.id
+  branch_name       = "develop"
+  framework         = "React"
+  enable_auto_build = true
+  stage             = "DEV"
+
+  environment_variables = {
+    VITE_API_BASE_URL = var.vite_api_base_url
+  }
+
+  tags = {
+    Branch = "develop"
+  }
+}
+
+# -------------------------------------------------------------
+# 최종 출력 (중복 제거된 섹션)
+# -------------------------------------------------------------
+
+output "public_ip" {
+  value = aws_eip.app.public_ip
+}
+
+output "ssh_command" {
+  value = "ssh -i qrworld-key.pem ubuntu@${aws_eip.app.public_ip}"
+}
+
+output "instance_id" {
+  value       = aws_instance.app.id
+  description = "EC2 인스턴스 ID"
+}
+
+output "ecr_repository_url" {
+  value = aws_ecr_repository.app.repository_url
+}
+
+output "rds_endpoint" {
+  value = aws_db_instance.qrworld.endpoint
+}

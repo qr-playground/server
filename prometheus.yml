@@ -1,9 +1,21 @@
 global:
-  scrape_interval: 5s
+  scrape_interval: 15s
   evaluation_interval: 5s
 
 scrape_configs:
-  - job_name: 'spring-boot-app'
-    metrics_path: '/actuator/prometheus'
+  # Prometheus 자기 자신을 수집하는 job
+  - job_name: "prometheus"
     static_configs:
-      - targets: [ 'app:8080' ] # 호스트에서 실행하는 경우 host.docker.internal:8080, docker-compose 실행 시 app:8080
+      - targets: ["localhost:9090"]
+
+  - job_name: "postgres-exporter"
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ["postgres_exporter:9187"]
+
+  # Spring Boot 애플리케이션을 수집하는 새로운 job
+  - job_name: "app"
+    scrape_interval: 5s
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["app:8080"]

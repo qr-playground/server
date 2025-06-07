@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "qrcode_counter")
+@Table(name = "qrcode_benefit")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QrcodeBenefit {

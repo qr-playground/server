@@ -24,7 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Set<String> EXCLUDE_URI_PREFIXES = Set.of(
             "/actuator", "/swagger-ui", "/v3/api-docs");
-            
+
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
 
@@ -34,7 +34,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
         log.info("requestURI: {}", requestURI);
+
+        // Actuator, Swagger 등의 경로는 JWT 검증을 건너뛰고 다음 필터로 진행
         if (EXCLUDE_URI_PREFIXES.stream().anyMatch(requestURI::startsWith)) {
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -47,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.debug("Security Context에 '{}' 인증 정보를 저장했습니다, uri: {}", authentication.getName(), requestURI);
         } else {
-            log.debug("유효한 JWT 토큰이 없습123니다, uri: {}", requestURI);
+            log.debug("유효한 JWT 토큰이 없습니다, uri: {}", requestURI);
             SecurityContextHolder.clearContext();
             // 필터에서 예외를 던지지 않고, SpringSecurity가 인증되지 않은 접근을 처리하도록 함
             // SecurityConfig에 설정된 authenticationEntryPoint가 401 응답을 반환함

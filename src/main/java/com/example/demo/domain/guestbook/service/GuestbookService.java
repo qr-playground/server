@@ -1,5 +1,7 @@
 package com.example.demo.domain.guestbook.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +14,7 @@ import com.example.demo.domain.guestbook.entity.Guestbook;
 import com.example.demo.domain.guestbook.repository.GuestbookRepository;
 import com.example.demo.domain.qrcode.entity.QrcodeBenefit;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
+import com.example.demo.domain.qrcode.service.QrcodeBenefitService;
 import com.example.demo.domain.qrcode.service.QrcodeEventService;
 import com.example.demo.global.error.ErrorCode;
 import com.example.demo.global.error.exception.CustomException;
@@ -26,6 +29,13 @@ public class GuestbookService {
 
     private final GuestbookRepository guestbookRepository;
     private final QrcodeEventService qrcodeEventService;
+    private final QrcodeBenefitService qrcodeBenefitService;
+
+    private boolean isOpenQrcodeEvent(QrcodeEvent qrcodeEvent) {
+        LocalDateTime now = LocalDateTime.now();
+
+        return now.isAfter(qrcodeEvent.getEntryStartAt()) && now.isBefore(qrcodeEvent.getEntryEndAt());
+    }
 
     /**
      * 방명록 생성
@@ -37,21 +47,17 @@ public class GuestbookService {
     @Transactional
     public GuestbookDto.Response createGuestbook(String shortId, GuestbookDto.Create request) {
         QrcodeEvent qrcodeEvent = qrcodeEventService.findByShortIdInternal(shortId);
+        if (!isOpenQrcodeEvent(qrcodeEvent)) {
+            throw new CustomException(ErrorCode.QRCODE_EVENT_ENTRY_NOT_OPEN);
+        }
 
         Guestbook guestbook = request.toEntity(qrcodeEvent);
-
         QrcodeBenefit qrcodeBenefit = qrcodeEvent.getQrcodeBenefit();
 
-        // 참여가 가능한지 인원 체크 
-        if (qrcodeBenefit.getIsAttendeeCountLimited() && qrcodeBenefit.getAvailableAttendeeCount() <= 0) {
-            throw new CustomException(ErrorCode.GUESTBOOK_QRCODE_EVENT_ENTRY_ENDED);
-        }
-        // TODO: 동시성, 락 구현 
-        // 참여 인원 카운트 감소
-        qrcodeBenefit.decrementAvailableAttendeeCount();
-        if (qrcodeBenefit.getAvailableAttendeeCount() == 0) {
-            // 참여 인원 제한 여부 설정
-            qrcodeBenefit.setIsAttendeeCountLimited();
+        // 참여가 가능한지 인원 체크 및 인원 감소
+        Boolean isAvailable = qrcodeBenefitService.decreaseIfAvailableAttendeeCount(qrcodeBenefit.getId());
+        if (!isAvailable) {
+            throw new CustomException(ErrorCode.QRCODE_BENEFIT_ENTRY_ENDED);
         }
 
         Guestbook savedGuestbook = guestbookRepository.save(guestbook);

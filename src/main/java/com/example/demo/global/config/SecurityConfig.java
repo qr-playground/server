@@ -67,7 +67,7 @@ public class SecurityConfig {
                                 // 요청에 대한 인가 규칙 설정
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/actuator/**").permitAll()
-                                                .requestMatchers("/api/users").authenticated()
+                                                .requestMatchers("/api/user/**").authenticated()
                                                 .requestMatchers("/api/qrcode/event").authenticated()
                                                 .requestMatchers("/api/qrcode/{shortId}/").permitAll()
                                                 // 인증 없이 접근 가능한 경로

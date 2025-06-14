@@ -10,7 +10,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "qrcode_benefit")
+@Table(name = "qrcode_benefit", indexes = {
+        @Index(name = "idx_qrcode_benefit_qrcode_event_id", columnList = "qrcode_event_id"),
+        @Index(name = "idx_qrcode_benefit_available_count", columnList = "available_attendee_count"),
+        @Index(name = "idx_qrcode_benefit_created_at", columnList = "created_at")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QrcodeBenefit {
@@ -21,7 +25,7 @@ public class QrcodeBenefit {
     private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "qrcode_event_id", nullable = false, unique = true)
+    @JoinColumn(name = "qrcode_event_id", nullable = false)
     private QrcodeEvent qrcodeEvent;
 
     @Column(name = "max_attendee_count", nullable = false)

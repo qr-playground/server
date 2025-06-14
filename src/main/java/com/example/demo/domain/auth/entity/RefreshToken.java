@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -20,7 +21,11 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "refresh_token")
+@Table(name = "refresh_token", indexes = {
+        @Index(name = "idx_refresh_token_user_id", columnList = "user_id"),
+        @Index(name = "idx_refresh_token_expired_at", columnList = "expired_at"),
+        @Index(name = "idx_refresh_token_is_revoked", columnList = "is_revoked")
+})
 public class RefreshToken {
 
     @Id
@@ -43,7 +48,7 @@ public class RefreshToken {
 
     @Column(name = "is_revoked", nullable = false)
     private boolean isRevoked;
-    
+
     @Column(name = "revoked_at", nullable = true, columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime revokedAt;
 

@@ -17,7 +17,13 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "qrcode_event", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "short_id" })
+        @UniqueConstraint(
+                name = "unique_qrcode_event_short_id",
+                columnNames = { "short_id" })
+}, indexes = {
+        @Index(name = "idx_qrcode_event_user_id", columnList = "user_id"),
+        @Index(name = "idx_qrcode_event_created_at", columnList = "created_at"),
+        @Index(name = "idx_qrcode_event_entry_end_at", columnList = "entry_end_at"),
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,7 +34,7 @@ public class QrcodeEvent {
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "short_id", nullable = false, unique = true, updatable = false, length = 12)
+    @Column(name = "short_id", nullable = false, length = 12)
     private String shortId;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -12,7 +12,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "qrcode_design")
+@Table(name = "qrcode_design", indexes = {
+        @Index(name = "idx_qrcode_design_qrcode_event_id", columnList = "qrcode_event_id")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QrcodeDesign {

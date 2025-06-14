@@ -13,7 +13,15 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "guestbook", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "short_id", "device_id" })
+        @UniqueConstraint(
+                name = "unique_guestbook_short_id_device_id",
+                columnNames = { "short_id", "device_id" }),
+        @UniqueConstraint(
+                name = "unique_guestbook_short_id_phone_number",
+                columnNames = { "short_id", "phone_number" })
+}, indexes = {
+        @Index(name = "idx_guestbook_short_id", columnList = "short_id"),
+        @Index(name = "idx_guestbook_created_at", columnList = "created_at")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -34,7 +42,7 @@ public class Guestbook {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "phone_number", nullable = true)
+    @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")

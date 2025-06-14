@@ -6,9 +6,8 @@ services:
     container_name: app
     ports:
       - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: local-docker
-      JAVA_OPTS: "-Xms256m -Xmx512m" # JVM 힙 메모리 제한
+    env_file:
+      - .env
     deploy:
       resources:
         limits:
@@ -44,9 +43,8 @@ services:
     container_name: grafana
     ports:
       - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+    env_file:
+      - .env
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
@@ -66,27 +64,30 @@ services:
       - "9187:9187" # 내부 포트는 9187 그대로, 호스트 포트만 다르게 매핑
     networks:
       - monitoring
-
-  k6:
-    image: grafana/k6:latest
-    container_name: k6
-    command: >
-      run -o experimental-prometheus-rw /scripts/test.js
-    environment:
-      - K6_PROMETHEUS_RW_SERVER_URL=http://prometheus:9090/api/v1/write
-      - K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM=true
+  
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    env_file:
+      - .env
     volumes:
-      - ./k6-scripts:/scripts
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5555:5432"
     networks:
       - monitoring
-    depends_on:
-      - app
-      - prometheus
-      - grafana
-      - postgres_exporter
+    deploy:
+      resources:
+        limits:
+          cpus: "2" # CPU 2코어로 제한
+          memory: 1G # 전체 메모리 1GB로 제한
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
 volumes:
   grafana_data:
+  postgres_data:
 
 networks:
   monitoring:

@@ -1,11 +1,5 @@
 package com.example.demo.domain.user.entity;
 
-import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.AccessLevel;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +7,18 @@ import java.util.UUID;
 
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = {
+        @UniqueConstraint(name = "unique_users_phone_number", columnNames = { "phone_number" })
+}, indexes = {
+        @Index(name = "idx_users_created_at", columnList = "created_at")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
@@ -24,8 +28,8 @@ public class User {
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "phone_number", nullable = false, unique = true)
-    private String phoneNumber; //  이메일로 변경될 소지 있음
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber; // 이메일로 변경될 소지 있음
 
     @Column(name = "password", nullable = false)
     private String password;

@@ -71,10 +71,10 @@ public class QrcodeEvent {
     @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP WITHOUT TIME ZONE")
     private LocalDateTime updatedAt;
 
-    @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private QrcodeDesign qrcodeDesign;
 
-    @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private QrcodeBenefit qrcodeBenefit;
 
     // shortId 대문자 알파벳

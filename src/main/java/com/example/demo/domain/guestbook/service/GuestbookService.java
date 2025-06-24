@@ -68,17 +68,17 @@ public class GuestbookService {
      * 방명록 목록 조회
      * 
      * @param shortId QR 코드 단축 ID
-     * @param page 페이지 번호
-     * @param size 페이지 크기
+     * @param page    페이지 번호
+     * @param size    페이지 크기
      * @return 방명록 목록 정보
      */
     public GuestbookDto.ListResponse getGuestbooks(String shortId, int page, int size) {
         QrcodeEvent qrcodeEvent = qrcodeEventService.findByShortIdInternal(shortId);
-        
+
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        
+
         Page<Guestbook> guestbooks = guestbookRepository.findAllByQrcodeEvent(qrcodeEvent, pageable);
-        
+
         return GuestbookDto.ListResponse.fromEntity(guestbooks);
     }
 }

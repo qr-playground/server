@@ -17,9 +17,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "qrcode_event", uniqueConstraints = {
-        @UniqueConstraint(
-                name = "unique_qrcode_event_short_id",
-                columnNames = { "short_id" })
+        @UniqueConstraint(name = "unique_qrcode_event_short_id", columnNames = { "short_id" })
 }, indexes = {
         @Index(name = "idx_qrcode_event_user_id", columnList = "user_id"),
         @Index(name = "idx_qrcode_event_created_at", columnList = "created_at"),

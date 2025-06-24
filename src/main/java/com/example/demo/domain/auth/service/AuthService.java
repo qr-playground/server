@@ -24,6 +24,8 @@ import com.example.demo.global.security.jwt.JwtProperties;
 import com.example.demo.global.security.jwt.JwtTokenProvider;
 import com.example.demo.global.security.jwt.JwtTokenStatus;
 import com.example.demo.global.security.user.CustomUserDetails;
+import com.example.demo.global.service.SmsService;
+import com.github.benmanes.caffeine.cache.Cache;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class AuthService {
     private final JwtProperties jwtProperties;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthenticationManager authenticationManager;
+    private final SmsService smsService;
+    private final Cache<String, Boolean> verifiedPhoneNumberCache;
 
     /**
      * 회원가입
@@ -46,6 +50,11 @@ public class AuthService {
     // ! TODO: 회원가입 시 핸드폰 번호 문자 인증
     @Transactional
     public AuthDto.Response signup(AuthDto.Signup requestDto) {
+        // verifiedPhoneNumberCache 에 인증된 핸드폰 번호가 없으면 예외 발생 
+        if (verifiedPhoneNumberCache.getIfPresent(requestDto.getPhoneNumber()) != true) {
+            throw new CustomException(ErrorCode.AUTH_NOT_VERIFIED_PHONE_NUMBER);
+        }
+        verifiedPhoneNumberCache.invalidate(requestDto.getPhoneNumber());
 
         Optional<User> user = userService.getUserByPhoneNumber(requestDto.getPhoneNumber());
 
@@ -145,5 +154,17 @@ public class AuthService {
                 .refreshToken(requestDto.getRefreshToken())
                 .accessTokenExpiresIn(jwtProperties.getTokenValidityInSeconds())
                 .build());
+    }
+    
+    public void sendVerificationCode(AuthDto.SendVerificationCode requestDto) {
+        if (smsService.sendSms(requestDto.getPhoneNumber()) != true) {
+            throw new CustomException(ErrorCode.AUTH_SEND_VERIFICATION_CODE_FAILED);
+        }
+    }
+
+    public void verifyVerificationCode(AuthDto.VerifyVerificationCode requestDto) {
+        if (smsService.verifyCode(requestDto.getPhoneNumber(), requestDto.getVerificationCode()) != true) {
+            throw new CustomException(ErrorCode.AUTH_VERIFY_VERIFICATION_CODE_FAILED);
+        }
     }
 }

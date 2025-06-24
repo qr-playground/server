@@ -57,6 +57,23 @@ public class AuthDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class SendVerificationCode {
+        private String phoneNumber;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VerifyVerificationCode {
+        private String phoneNumber;
+        private String verificationCode;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class Response {
 
         private UserInfo userInfo;

@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.aventrix.jnanoid.jnanoid.NanoIdUtils;
 import com.example.demo.domain.guestbook.entity.Guestbook;
 import com.example.demo.domain.user.entity.User;
+import com.example.demo.global.util.CodeGeneratorUtil;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -75,17 +75,11 @@ public class QrcodeEvent {
     @OneToOne(mappedBy = "qrcodeEvent", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private QrcodeBenefit qrcodeBenefit;
 
-    // shortId 대문자 알파벳
-    private static final char[] ALPHANUMERIC_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
-
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-        this.shortId = NanoIdUtils.randomNanoId(
-                NanoIdUtils.DEFAULT_NUMBER_GENERATOR,
-                ALPHANUMERIC_CHARACTERS,
-                12);
+        this.shortId = CodeGeneratorUtil.generateShortId();
         this.isEntryEnded = false;
     }
 

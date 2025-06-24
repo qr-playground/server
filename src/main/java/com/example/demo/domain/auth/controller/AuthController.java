@@ -46,4 +46,16 @@ public class AuthController {
     public ResponseEntity<AuthDto.Response> refresh(@Valid @RequestBody AuthDto.Refresh requestDto) {
         return ResponseEntity.ok(authService.refresh(requestDto));
     }
+
+    @PostMapping("/send-verification-code")
+    public ResponseEntity<Void> sendVerificationCode(@Valid @RequestBody AuthDto.SendVerificationCode requestDto) {
+        authService.sendVerificationCode(requestDto);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/verify-verification-code")
+    public ResponseEntity<Void> verifyVerificationCode(@Valid @RequestBody AuthDto.VerifyVerificationCode requestDto) {
+        authService.verifyVerificationCode(requestDto);
+        return ResponseEntity.ok().build();
+    }
 }

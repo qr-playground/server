@@ -29,6 +29,9 @@ public enum ErrorCode {
     AUTH_NOT_FOUND_USER(HttpStatus.NOT_FOUND, "E1007", "존재하지 않는 사용자입니다"),
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "E1008", "비밀번호가 일치하지 않습니다"),
     AUTH_INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "E1009", "리프레시 토큰이 유효하지 않습니다"),
+    AUTH_NOT_VERIFIED_PHONE_NUMBER(HttpStatus.CONFLICT, "E1010", "인증되지 않았거나, 인증 시간이 지났습니다."),
+    AUTH_SEND_VERIFICATION_CODE_FAILED(HttpStatus.BAD_REQUEST, "E1011", "인증 코드 발송 실패"),
+    AUTH_VERIFY_VERIFICATION_CODE_FAILED(HttpStatus.BAD_REQUEST, "E1012", "인증 코드 검증 실패"),
 
     // QR 관련 에러 2000 ~ 2999 --------------------------------
     QRCODE_EVENT_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E2000", "QR 오류가 발생했습니다"),
@@ -57,7 +60,6 @@ public enum ErrorCode {
     IMAGE_ACCESS_DENIED(HttpStatus.FORBIDDEN, "E4004", "접근 권한이 없습니다"),
     IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "E4005", "엔티티를 찾을 수 없습니다"),
     IMAGE_S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E4006", "S3 업로드 실패"),
-            
 
     // GUESTBOOK 관련 에러 5000 ~ 5999 --------------------------------
     GUESTBOOK_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E5000", "방명록 오류가 발생했습니다"),

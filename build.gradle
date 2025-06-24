@@ -25,6 +25,12 @@ repositories {
 }
 
 dependencies {
+	// ========== Caffeine ==========
+	implementation "com.github.ben-manes.caffeine:caffeine:3.1.8"
+	
+	// ========== 문자 발송 ==========
+	implementation 'net.nurigo:sdk:4.2.7'
+
 	// ========== 랜덤 문자열 생성 ==========
 	implementation 'com.aventrix.jnanoid:jnanoid:2.0.0'
 

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.BatchSize;
+
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 
 import jakarta.persistence.*;
@@ -38,6 +40,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role; // * 유저 권한 [USER, ADMIN]
 
+    @BatchSize(size = 10)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<QrcodeEvent> qrcodeEvents = new ArrayList<>();
 

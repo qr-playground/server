@@ -88,7 +88,10 @@ public class QrcodeEventService {
     public QrcodeEventDto.ListResponse getUserQrcodeEvents(User user, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        Page<QrcodeEvent> qrcodeEvents = qrcodeEventRepository.findAllByUserAndIsDeletedFalse(user, pageable);
+        // Page<QrcodeEvent> qrcodeEvents =
+        // qrcodeEventRepository.findAllByUserAndIsDeletedFalse(user, pageable);
+        Page<QrcodeEvent> qrcodeEvents = qrcodeEventRepository.findAllByUserWithDetails(user, pageable);
+
         return QrcodeEventDto.ListResponse.fromEntity(qrcodeEvents);
     }
 

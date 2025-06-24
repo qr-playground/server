@@ -102,8 +102,6 @@ public class GuestbookDto {
         }
     }
 
-
-
     // @Data
     // @AllArgsConstructor
     // @NoArgsConstructor

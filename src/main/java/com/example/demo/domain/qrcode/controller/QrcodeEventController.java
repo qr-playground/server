@@ -40,7 +40,7 @@ public class QrcodeEventController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         // QR 코드 생성 서비스 호출
-        QrcodeEventDto.Response response = qrcodeEventService.createQrcodeEvent(request, userDetails.getUser());
+        QrcodeEventDto.Response response = qrcodeEventService.createQrcodeEvent(request, userDetails.getUser().getPhoneNumber());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

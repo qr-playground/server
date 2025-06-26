@@ -34,6 +34,10 @@ public class GuestbookService {
     private boolean isOpenQrcodeEvent(QrcodeEvent qrcodeEvent) {
         LocalDateTime now = LocalDateTime.now();
 
+        log.info("qrcodeEvent.getEntryStartAt(): {}", qrcodeEvent.getEntryStartAt());
+        log.info("qrcodeEvent.getEntryEndAt(): {}", qrcodeEvent.getEntryEndAt());
+        log.info("now: {}", now);
+
         return now.isAfter(qrcodeEvent.getEntryStartAt()) && now.isBefore(qrcodeEvent.getEntryEndAt());
     }
 

@@ -101,8 +101,6 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleException(
                         Exception e, HttpServletRequest request) {
-                log.error("처리되지 않은 예외 발생: {} - {}", e.getClass().getName(), e.getMessage());
-
                 ErrorResponse response = ErrorResponse.of(
                                 ErrorCode.COMMON_INTERNAL_SERVER_ERROR,
                                 request.getRequestURI());

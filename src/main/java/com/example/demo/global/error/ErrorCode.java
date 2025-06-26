@@ -83,6 +83,13 @@ public enum ErrorCode {
     // STATISTIC 관련 에러 7000 ~ 7999 --------------------------------
     STATISTIC_NOT_FOUND(HttpStatus.NOT_FOUND, "E7000", "통계 정보를 찾을 수 없습니다"),
 
+    // INTERCEPTOR 관련 에러 99000 ~ 99999 --------------------------------
+    INTERCEPTOR_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E99000", "인터셉터 오류가 발생했습니다"),
+    INTERCEPTOR_RATE_LIMIT_DEFAULT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "E99001", "기본 요청 횟수를 초과했습니다"),
+    INTERCEPTOR_RATE_LIMIT_SMS_SEND_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "E99002", "SMS 발송 요청 횟수를 초과했습니다"),
+    INTERCEPTOR_RATE_LIMIT_GUESTBOOK_WRITE_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "E99003", "게스트북 작성 요청 횟수를 초과했습니다"),
+    
+
     // 예외 처리 범위 초과 --------------------------------
     OUT_OF_RANGE_ERROR(HttpStatus.BAD_REQUEST, "E100000", "예외 처리 오류 코드 범위 초과");
 

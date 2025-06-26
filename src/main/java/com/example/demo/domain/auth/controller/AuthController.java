@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.domain.auth.dto.AuthDto;
 import com.example.demo.domain.auth.service.AuthService;
+import com.example.demo.global.interceptor.RateLimit;
+import com.example.demo.global.interceptor.RateLimitPlan;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +50,7 @@ public class AuthController {
     }
 
     @PostMapping("/send-verification-code")
+    @RateLimit(plan = RateLimitPlan.SMS_SEND)
     public ResponseEntity<Void> sendVerificationCode(@Valid @RequestBody AuthDto.SendVerificationCode requestDto) {
         authService.sendVerificationCode(requestDto);
         return ResponseEntity.ok().build();

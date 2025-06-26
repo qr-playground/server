@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.domain.guestbook.dto.GuestbookDto;
 import com.example.demo.domain.guestbook.service.GuestbookService;
+import com.example.demo.global.interceptor.RateLimit;
+import com.example.demo.global.interceptor.RateLimitPlan;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class GuestbookController {
      * @return 생성된 방명록 정보
      */
     @PostMapping("/")
+    @RateLimit(plan = RateLimitPlan.GUESTBOOK_WRITE)
     public ResponseEntity<GuestbookDto.Response> createGuestbook(@PathVariable String shortId,
             @RequestBody GuestbookDto.Create request) {
 

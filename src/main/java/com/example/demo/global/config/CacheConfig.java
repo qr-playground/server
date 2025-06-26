@@ -1,10 +1,15 @@
 package com.example.demo.global.config;
 
+import com.example.demo.global.interceptor.RateLimitPlan;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+
+import io.github.bucket4j.Bucket;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -22,6 +27,16 @@ public class CacheConfig {
         return Caffeine.newBuilder()
                 .expireAfterWrite(60, TimeUnit.MINUTES) // 60분 TTL
                 .maximumSize(10_000) // 최대 10,000개
+                .build();
+    }
+
+    @Bean
+    public Cache<String, Bucket> rateLimitCache() {
+        Duration cacheMaxExpireDuration = RateLimitPlan.getMaximumDuration();
+
+        return Caffeine.newBuilder()
+                .expireAfterAccess(cacheMaxExpireDuration)
+                .maximumSize(5_000) // 최대 5,000개의 IP/Plan 조합을 저장
                 .build();
     }
 }

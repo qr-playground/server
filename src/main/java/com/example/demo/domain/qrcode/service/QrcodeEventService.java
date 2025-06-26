@@ -15,6 +15,7 @@ import com.example.demo.domain.qrcode.entity.QrcodeDesign;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 import com.example.demo.domain.qrcode.repository.QrcodeEventRepository;
 import com.example.demo.domain.user.entity.User;
+import com.example.demo.domain.user.service.UserService;
 import com.example.demo.global.error.ErrorCode;
 import com.example.demo.global.error.exception.CustomException;
 
@@ -30,12 +31,16 @@ public class QrcodeEventService {
     private final QrcodeDesignService qrcodeDesignService;
     private final QrcodeBenefitService qrcodeBenefitService;
     private final ImageService imageService;
+    private final UserService userService;
 
     /**
      * QR 코드 생성
      */
     @Transactional
-    public QrcodeEventDto.Response createQrcodeEvent(QrcodeEventDto.Create request, User user) {
+    public QrcodeEventDto.Response createQrcodeEvent(QrcodeEventDto.Create request, String phoneNumber) {
+        User user = userService.getUserByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
         QrcodeEvent qrcodeEvent = qrcodeEventRepository.save(request.toQrcodeEventEntity(user));
         Image logoImage = null;
 

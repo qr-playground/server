@@ -12,12 +12,12 @@ export let options = {
 export default function () {
   // 3) GET 요청 실행 (Bearer 토큰 + accept 헤더 포함)
   let res = http.get(
-    "http://localhost:8080/api/statistic/qrcode/user?page=0&size=1000",
+    "http://localhost:8080/api/statistic/qrcode/user/total",
     {
       headers: {
         accept: "*/*",
         Authorization:
-          "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzdHJpbmciLCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzUwNzAwODkzLCJleHAiOjE3NTA3MDI2OTN9.fW3wZXFMBuQBGQyq5av2oATkTqSapvZsyzBqBbQdTeKvFMDwzo6-_id-4KdWqTYDJ78qVSp4eB-l8v8dX7obAw",
+          "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJzdHJpbmciLCJhdXRoIjoiUk9MRV9VU0VSIiwiaWF0IjoxNzUwODU4NjE2LCJleHAiOjE3NTA4NjA0MTZ9.0kp7PnnsImvsJ_pLTffbZ8P5RubEm0FQv4LtrI5nVwzg4UO_7iLJS7Frt_jV48SrdMRvL6rBRygGd409Lc6nGQ",
       },
     }
   );

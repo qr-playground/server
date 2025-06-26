@@ -80,6 +80,9 @@ public enum ErrorCode {
     QRCODE_BENEFIT_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E6005", "엔티티를 찾을 수 없습니다"),
     QRCODE_BENEFIT_ENTRY_ENDED(HttpStatus.CONFLICT, "E6006", "QR 코드 이벤트 참여가 종료되었습니다"),
 
+    // STATISTIC 관련 에러 7000 ~ 7999 --------------------------------
+    STATISTIC_NOT_FOUND(HttpStatus.NOT_FOUND, "E7000", "통계 정보를 찾을 수 없습니다"),
+
     // 예외 처리 범위 초과 --------------------------------
     OUT_OF_RANGE_ERROR(HttpStatus.BAD_REQUEST, "E100000", "예외 처리 오류 코드 범위 초과");
 

@@ -20,11 +20,17 @@ public class StatisticController {
 
     private final StatisticService statisticService;
 
-    @GetMapping("/qrcode/user")
-    public ResponseEntity<StatisticDto.Response> getQrcodeStatistic(
+    @GetMapping("/qrcode/user/page")
+    public ResponseEntity<StatisticDto.Response> getQrcodeStatisticPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         StatisticDto.Response response = statisticService.getQrcodeStatistic(page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/qrcode/user/total")
+    public ResponseEntity<StatisticDto.Response> getQrcodeStatisticTotal() {
+        StatisticDto.Response response = statisticService.getQrcodeStatisticTotal();
         return ResponseEntity.ok(response);
     }
 }

@@ -6,7 +6,7 @@ public final class CodeGeneratorUtil {
     private static final char[] ALPHANUMERIC_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
     private static final char[] NUMERIC_CHARACTERS = "1234567890".toCharArray();
     private static final int SHORT_ID_LENGTH = 12;
-    private static final int VERIFICATION_CODE_LENGTH = 5;
+    private static final int VERIFICATION_CODE_LENGTH = 6;
 
     public static String generateShortId() {
         return NanoIdUtils.randomNanoId(

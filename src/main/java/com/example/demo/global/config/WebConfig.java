@@ -10,7 +10,9 @@ import com.example.demo.global.interceptor.LoggingInterceptor;
 import com.example.demo.global.interceptor.RateLimitInterceptor;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
@@ -22,8 +24,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final RateLimitInterceptor rateLimitInterceptor;
 
+    // CORS 설정
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        log.info("frontendUrl: {}", frontendUrl);
         registry.addMapping("/**")
                 .allowedOrigins(frontendUrl) // 프로퍼티에서 가져온 프론트엔드 개발 서버 주소
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")

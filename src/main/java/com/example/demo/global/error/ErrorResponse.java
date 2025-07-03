@@ -31,7 +31,7 @@ public class ErrorResponse {
     }
 
     // 전체 오류 응답 생성자 (필드 오류 없음)
-    private ErrorResponse(ErrorCode errorCode, String path) {
+    public ErrorResponse(ErrorCode errorCode, String path) {
         this(errorCode, path, Collections.emptyList());
     }
 

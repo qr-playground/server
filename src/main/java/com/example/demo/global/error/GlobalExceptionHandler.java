@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.example.demo.global.error.exception.CustomException;
+import com.example.demo.global.error.exception.RateLimitException;
 import com.example.demo.global.error.exception.UserNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +20,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+        // Rate Limit 예외 처리 (CustomException보다 먼저 처리)
+        @ExceptionHandler(RateLimitException.class)
+        public ResponseEntity<ErrorResponse> handleRateLimit(RateLimitException ex, HttpServletRequest request) {
+                ErrorCode code = ex.getErrorCode();
+
+                log.error("Rate Limit 예외 발생: [{}] {} - 재시도 가능 시간: {}초",
+                                code, ex.getMessage(), ex.getRetryAfterSeconds());
+
+                // Rate Limit 전용 응답 생성
+                RateLimitErrorResponse response = RateLimitErrorResponse.of(
+                                code,
+                                request.getRequestURI(),
+                                ex.getRetryAfterSeconds());
+
+                return ResponseEntity.status(code.getStatus())
+                                .header("X-Rate-Limit-Retry-After-Seconds", String.valueOf(ex.getRetryAfterSeconds()))
+                                .body(response);
+        }
 
         // 커스텀 예외 처리
         @ExceptionHandler(CustomException.class)
@@ -101,6 +121,9 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleException(
                         Exception e, HttpServletRequest request) {
+
+                log.error("처리되지 않은 예외 발생: {}", e);
+
                 ErrorResponse response = ErrorResponse.of(
                                 ErrorCode.COMMON_INTERNAL_SERVER_ERROR,
                                 request.getRequestURI());

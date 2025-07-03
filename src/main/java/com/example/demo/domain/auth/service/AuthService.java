@@ -157,7 +157,7 @@ public class AuthService {
     }
     
     public void sendVerificationCode(AuthDto.SendVerificationCode requestDto) {
-        if (smsService.sendSms(requestDto.getPhoneNumber()) != true) {
+        if (smsService.sendVerificationCodeSms(requestDto.getPhoneNumber()) != true) {
             throw new CustomException(ErrorCode.AUTH_SEND_VERIFICATION_CODE_FAILED);
         }
     }
@@ -166,5 +166,9 @@ public class AuthService {
         if (smsService.verifyCode(requestDto.getPhoneNumber(), requestDto.getVerificationCode()) != true) {
             throw new CustomException(ErrorCode.AUTH_VERIFY_VERIFICATION_CODE_FAILED);
         }
+    }
+
+    public AuthDto.Response getDeviceId() {
+        return AuthDto.Response.fromEntity(jwtTokenProvider.createDeviceIdToken());
     }
 }

@@ -34,7 +34,7 @@ public class GuestbookController {
      * @return 생성된 방명록 정보
      */
     @PostMapping("/")
-    @RateLimit(plan = RateLimitPlan.GUESTBOOK_WRITE)
+    // @RateLimit(plan = RateLimitPlan.GUESTBOOK_WRITE)
     public ResponseEntity<GuestbookDto.Response> createGuestbook(@PathVariable String shortId,
             @RequestBody GuestbookDto.Create request) {
 

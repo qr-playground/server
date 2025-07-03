@@ -43,6 +43,19 @@ public class JwtTokenProvider {
         this.customUserDetailsService = customUserDetailsService;
     }
 
+    public String createDeviceIdToken() {
+        // UUID 생성하여 JWT 내부에 포함
+        String deviceUuid = java.util.UUID.randomUUID().toString();
+
+        return Jwts.builder()
+                .setSubject("deviceId")
+                .claim("uuid", deviceUuid) // UUID를 클레임에 포함
+                .signWith(key, SignatureAlgorithm.HS512)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 30))
+                .compact();
+    }
+
     /**
      * 사용자 인증 정보를 기반으로 JWT 액세스 토큰 생성
      */
@@ -129,6 +142,30 @@ public class JwtTokenProvider {
             return JwtTokenStatus.ILLEGAL_ARGUMENT;
         } catch (Exception e) {
             return JwtTokenStatus.UNKNOWN_ERROR;
+        }
+    }
+
+    /**
+     * Device ID 토큰에서 UUID 추출
+     */
+    public String getUuidFromDeviceIdToken(String deviceIdToken) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(deviceIdToken)
+                    .getBody();
+
+            // subject가 "deviceId"인지 확인
+            if (!"deviceId".equals(claims.getSubject())) {
+                log.warn("Invalid device ID token subject: {}", claims.getSubject());
+                return null;
+            }
+
+            return claims.get("uuid", String.class);
+        } catch (Exception e) {
+            log.debug("Device ID 토큰 파싱 실패: {}", e.getMessage());
+            return null;
         }
     }
 

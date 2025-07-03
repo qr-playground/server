@@ -78,6 +78,7 @@ public class AuthDto {
 
         private UserInfo userInfo;
         private TokenInfo tokenInfo;
+        private String deviceId;
 
         public static Response fromEntity(User user) {
             return Response.builder()
@@ -95,6 +96,12 @@ public class AuthDto {
         public static Response fromEntity(TokenDto tokenDto) {
             return Response.builder()
                     .tokenInfo(TokenInfo.fromDto(tokenDto))
+                    .build();
+        }
+
+        public static Response fromEntity(String deviceId) {
+            return Response.builder()
+                    .deviceId(deviceId)
                     .build();
         }
 

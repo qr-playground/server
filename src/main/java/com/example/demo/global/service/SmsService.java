@@ -3,8 +3,6 @@ package com.example.demo.global.service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.global.error.ErrorCode;
-import com.example.demo.global.error.exception.CustomException;
 import com.example.demo.global.util.CodeGeneratorUtil;
 import com.example.demo.global.util.MessageGeneratorUtil;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -44,7 +42,7 @@ public class SmsService {
     }
 
     // verificationCodeCache 에 인증코드 저장
-    public boolean sendSms(String to) {
+    public boolean sendVerificationCodeSms(String to) {
         String verificationCode = CodeGeneratorUtil.generateVerificationCode();
         Message message = new Message();
         // 발신번호 및 수신번호는 "-"없이 입력
@@ -74,5 +72,33 @@ public class SmsService {
         verificationCodeCache.invalidate(to);
         verifiedPhoneNumberCache.put(to, true);
         return true;
+    }
+
+    // 문자 발송
+    public boolean sendSms(String to, String text) {
+        Message message = new Message();
+        // 발신번호 및 수신번호는 "-"없이 입력
+        message.setFrom(smsSender);
+        message.setTo(to);
+        message.setText(text);
+
+        try {
+            messageService.sendOne(new SingleMessageSendingRequest(message));
+            return true;
+        } catch (Exception e) {
+            log.error("SMS 발송 실패 : {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public void mockSendSms(String to, String text) {
+        try {
+            log.info("[Mock SMS] 0.5초 지연 시작. 수신자: {}, 메시지: {}", to, text);
+            Thread.sleep(500); // 0.5초 동안 현재 스레드를 중지
+            log.info("[Mock SMS] 0.5초 지연 완료. 수신자: {}, 메시지: {}", to, text);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("Mock SMS 지연 중 오류 발생", e);
+        }
     }
 }

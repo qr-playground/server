@@ -2,6 +2,7 @@ package com.example.demo.domain.guestbook.service;
 
 import java.time.LocalDateTime;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,10 @@ import com.example.demo.domain.qrcode.service.QrcodeBenefitService;
 import com.example.demo.domain.qrcode.service.QrcodeEventService;
 import com.example.demo.global.error.ErrorCode;
 import com.example.demo.global.error.exception.CustomException;
+import com.example.demo.global.service.SmsEventDto;
+import com.example.demo.global.service.SmsEventFactory;
+import com.example.demo.global.service.SmsService;
+import com.example.demo.global.util.MessageGeneratorUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,17 +32,19 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GuestbookService {
 
+    private final ApplicationEventPublisher eventPublisher;
     private final GuestbookRepository guestbookRepository;
     private final QrcodeEventService qrcodeEventService;
     private final QrcodeBenefitService qrcodeBenefitService;
+    private final SmsService smsService;
 
     private boolean isOpenQrcodeEvent(QrcodeEvent qrcodeEvent) {
         LocalDateTime now = LocalDateTime.now();
-
+        log.info("now: {}", now);
         log.info("qrcodeEvent.getEntryStartAt(): {}", qrcodeEvent.getEntryStartAt());
         log.info("qrcodeEvent.getEntryEndAt(): {}", qrcodeEvent.getEntryEndAt());
-        log.info("now: {}", now);
-
+        log.info("now.isAfter(qrcodeEvent.getEntryStartAt()): {}", now.isAfter(qrcodeEvent.getEntryStartAt()));
+        log.info("now.isBefore(qrcodeEvent.getEntryEndAt()): {}", now.isBefore(qrcodeEvent.getEntryEndAt()));
         return now.isAfter(qrcodeEvent.getEntryStartAt()) && now.isBefore(qrcodeEvent.getEntryEndAt());
     }
 
@@ -56,6 +63,10 @@ public class GuestbookService {
         }
 
         Guestbook guestbook = request.toEntity(qrcodeEvent);
+
+        String phoneNumber = guestbook.getPhoneNumber();
+        String eventTitle = qrcodeEvent.getTitle();
+
         QrcodeBenefit qrcodeBenefit = qrcodeEvent.getQrcodeBenefit();
 
         // 참여가 가능한지 인원 체크 및 인원 감소
@@ -65,6 +76,10 @@ public class GuestbookService {
         }
 
         Guestbook savedGuestbook = guestbookRepository.save(guestbook);
+
+        SmsEventDto smsEvent = SmsEventFactory.createGuestbookEvent(phoneNumber, eventTitle);
+        eventPublisher.publishEvent(smsEvent);
+        // smsService.mockSendSms(phoneNumber, MessageGeneratorUtil.generateEventJoinCompleteMessage(phoneNumber, eventTitle));
         return GuestbookDto.Response.fromEntity(savedGuestbook);
     }
 

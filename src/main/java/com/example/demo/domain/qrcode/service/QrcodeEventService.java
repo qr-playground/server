@@ -132,4 +132,20 @@ public class QrcodeEventService {
         return QrcodeEventDto.Response.fromEntity(qrcodeEvent);
     }
 
+    /**
+     * QR 코드 이벤트 검색 (PGroonga Fuzzy 검색 + 페이지네이션)
+     */
+    @Transactional(readOnly = false)
+    public QrcodeEventDto.ListResponse searchQrcodeEvents(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<QrcodeEvent> qrcodeEvents = qrcodeEventRepository.searchFuzzy(keyword, pageable);
+        return QrcodeEventDto.ListResponse.fromEntity(qrcodeEvents);
+    }
+
+    @Transactional(readOnly = false)
+    public QrcodeEventDto.ListResponse searchQrcodeEvents2(String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<QrcodeEvent> qrcodeEvents = qrcodeEventRepository.searchQrcodeEventsPgroonga(keyword, pageable);
+        return QrcodeEventDto.ListResponse.fromEntity(qrcodeEvents);
+    }
 }

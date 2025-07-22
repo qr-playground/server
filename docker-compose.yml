@@ -18,6 +18,9 @@ services:
           memory: 512M
     networks:
       - monitoring
+    depends_on:
+      - postgres-master
+      - postgres-slave
 
   prometheus:
     image: prom/prometheus
@@ -64,14 +67,20 @@ services:
       - "9187:9187" # 내부 포트는 9187 그대로, 호스트 포트만 다르게 매핑
     networks:
       - monitoring
-  
-  postgres:
-    image: postgres:16
-    container_name: postgres
+    command:
+      - "--collector.stat_statements"
+    depends_on:
+      - postgres-master
+
+  postgres-master:
+    image: groonga/pgroonga:4.0.1-debian-16
+    container_name: postgres-master
     env_file:
       - .env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_master_data:/var/lib/postgresql/data
+      - ./init-master.sql:/docker-entrypoint-initdb.d/01-init-master.sql
+      - ./pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
     ports:
       - "5555:5432"
     networks:
@@ -84,10 +93,53 @@ services:
         reservations:
           cpus: "0.5"
           memory: 512M
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=3
+      -c hot_standby=on
+      -c shared_preload_libraries='pg_stat_statements,pgroonga_wal_resource_manager'
+      -c pgroonga.enable_wal_resource_manager=on
+      -c wal_keep_size=1GB
+      -c max_connections=200
+      -c listen_addresses='*'
+      -c hba_file=/var/lib/postgresql/data/pg_hba.conf
+
+  postgres-slave:
+    image: groonga/pgroonga:4.0.1-debian-16
+    container_name: postgres-slave
+    env_file:
+      - .env
+    volumes:
+      - postgres_slave_data:/var/lib/postgresql/data
+      - ./init-slave.sh:/docker-entrypoint-initdb.d/01-init-slave.sh
+    depends_on:
+      - postgres-master
+    ports:
+      - "5556:5432"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    command: >
+      postgres
+      -c hot_standby=on
+      -c shared_preload_libraries='pg_stat_statements,pgroonga_wal_resource_manager'
+      -c pgroonga.enable_wal_resource_manager=on
+      -c primary_conninfo='host=postgres-master port=5432 user=replicator password=repl_password application_name=slave1'
+      -c primary_slot_name='replication_slot_slave1'
 
 volumes:
   grafana_data:
-  postgres_data:
+  postgres_master_data:
+  postgres_slave_data:
 
 networks:
   monitoring:

@@ -1,5 +1,7 @@
 package com.example.demo.domain.qrcode.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,7 +42,8 @@ public class QrcodeEventController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         // QR 코드 생성 서비스 호출
-        QrcodeEventDto.Response response = qrcodeEventService.createQrcodeEvent(request, userDetails.getUser().getPhoneNumber());
+        QrcodeEventDto.Response response = qrcodeEventService.createQrcodeEvent(request,
+                userDetails.getUser().getPhoneNumber());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -101,4 +104,29 @@ public class QrcodeEventController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * QR 코드 이벤트 검색 API (PGroonga Fuzzy 검색 + 페이지네이션)
+     * 
+     * @param keyword 검색 키워드
+     * @param page    페이지 번호 (0부터 시작)
+     * @param size    페이지 크기
+     * @return 검색된 QR 코드 이벤트 목록 + 페이지네이션 정보
+     */
+    @GetMapping("/search")
+    public ResponseEntity<QrcodeEventDto.ListResponse> searchQrcodeEvents(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        QrcodeEventDto.ListResponse response = qrcodeEventService.searchQrcodeEvents(keyword, page, size);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search2")
+    public ResponseEntity<QrcodeEventDto.ListResponse> searchQrcodeEvents2(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        QrcodeEventDto.ListResponse response = qrcodeEventService.searchQrcodeEvents2(keyword, page, size);
+        return ResponseEntity.ok(response);
+    }
 }

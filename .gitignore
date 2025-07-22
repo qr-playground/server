@@ -38,11 +38,15 @@ out/
 
 ### environment settings ### 
 **/application-*.yaml
+**/application-*.yml
 !**/application-exam.yaml
+!**/application-exam.yml
 qrworld-key.*
 qrworld-key
 *.pem
 application-local-docker.yaml
+application-local-docker.yml
+
 
 # Terraform
 .terraform/

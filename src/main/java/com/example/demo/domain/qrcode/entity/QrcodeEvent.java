@@ -21,7 +21,7 @@ import lombok.NoArgsConstructor;
 }, indexes = {
         @Index(name = "idx_qrcode_event_user_id", columnList = "user_id"),
         @Index(name = "idx_qrcode_event_created_at", columnList = "created_at"),
-        @Index(name = "idx_qrcode_event_entry_end_at", columnList = "entry_end_at"),
+        @Index(name = "idx_qrcode_event_entry_end_at", columnList = "entry_end_at")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

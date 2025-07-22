@@ -62,14 +62,15 @@ public class SecurityConfig {
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                                
-
                                 // 요청에 대한 인가 규칙 설정
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/actuator/**").permitAll()
                                                 .requestMatchers("/api/user/**").authenticated()
-                                                .requestMatchers("/api/qrcode/event").authenticated()
-                                                .requestMatchers("/api/qrcode/{shortId}/").permitAll()
+                                                .requestMatchers("/api/qrcode/event/user").authenticated()
+                                                .requestMatchers("/api/qrcode/event/{shortId}").permitAll()
+                                                .requestMatchers("/api/qrcode/event/search").permitAll()
+                                                .requestMatchers("/api/qrcode/event/**").authenticated()
+                                                .requestMatchers("/api/qrcode/**").permitAll()
                                                 // 인증 없이 접근 가능한 경로
                                                 .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**")
                                                 .permitAll()

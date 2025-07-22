@@ -3,6 +3,7 @@ package com.example.demo.global.security.user;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.domain.user.entity.User;
@@ -10,6 +11,7 @@ import com.example.demo.domain.user.repository.UserRepository;
 import com.example.demo.global.error.exception.UserNotFoundException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spring Security 인증에 사용되는 UserDetailsService 구현체
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;

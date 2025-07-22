@@ -47,6 +47,8 @@ dependencies {
 
 	// ========== JPA & DB ==========
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA
+	implementation 'org.flywaydb:flyway-core' // Flyway DB Migration
+	implementation 'org.flywaydb:flyway-database-postgresql' // Flyway PostgreSQL Support
 	runtimeOnly 'com.h2database:h2' // H2
 	runtimeOnly 'org.postgresql:postgresql' // PostgreSQL
 

@@ -110,6 +110,11 @@ jobs:
               sudo yum install -y awscli
             fi
 
+            # -- Git 설치 확인/설치 --
+            if ! command -v git >/dev/null 2>&1; then
+              sudo yum install -y git
+            fi
+
             # -- 4) 애플리케이션용 docker-compose 코드 동기화 --
             if [ ! -d ~/deploy/docker-compose ]; then
               git clone https://github.com/qr-playground/server.git \

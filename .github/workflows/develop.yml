@@ -138,6 +138,11 @@ jobs:
 
             # -- 6) 컨테이너 새 이미지로 재시작 --
             cd ~/deploy/docker-compose
+
+            cat << 'EOF' > .env
+            ${{ secrets.APPLICATION_ENV }}
+            EOF
+
             sudo docker-compose -f docker-compose.app.yml pull app
             sudo docker-compose -f docker-compose.app.yml up -d app
 

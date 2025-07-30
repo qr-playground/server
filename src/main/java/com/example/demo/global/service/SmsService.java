@@ -93,9 +93,7 @@ public class SmsService {
 
     public void mockSendSms(String to, String text) {
         try {
-            log.info("[Mock SMS] 0.5초 지연 시작. 수신자: {}, 메시지: {}", to, text);
-            Thread.sleep(500); // 0.5초 동안 현재 스레드를 중지
-            log.info("[Mock SMS] 0.5초 지연 완료. 수신자: {}, 메시지: {}", to, text);
+            Thread.sleep(3000); // 3초 동안 현재 스레드를 중지
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Mock SMS 지연 중 오류 발생", e);

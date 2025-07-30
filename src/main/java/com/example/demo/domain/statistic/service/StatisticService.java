@@ -43,7 +43,7 @@ public class StatisticService {
                 return StatisticDto.Response.fromEntity(statistic);
         }
 
-        // @Scheduled(cron = "0 */5 * * * *")
+        @Scheduled(cron = "0 */5 * * * *")
         @Transactional
         public void scheduleStatisticRefresh() {
                 log.info("[" + LocalDateTime.now() + "]" + "통계 갱신 스케줄링 작업을 시작합니다...");

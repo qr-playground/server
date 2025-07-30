@@ -73,7 +73,7 @@ public class AuthService {
     /**
      * 로그인 및 토큰 발급
      */
-    @Transactional // ! TODO: RTR 도입, RTR 도입 시 트랜잭션 처리 필요
+    @Transactional(readOnly = true) // ! TODO: RTR 도입, RTR 도입 시 트랜잭션 처리 필요
     public AuthDto.Response login(AuthDto.Login requestDto) {
 
         Authentication authentication;

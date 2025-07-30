@@ -1,6 +1,7 @@
 package com.example.demo.global.config;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,9 +16,10 @@ public class AsyncConfig {
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(15);
-        executor.setMaxPoolSize(50);
-        executor.setQueueCapacity(100);
+        executor.setMaxPoolSize(100);
+        executor.setQueueCapacity(30);
         executor.setThreadNamePrefix("AsyncThread-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
         executor.initialize();
         return executor;
     }

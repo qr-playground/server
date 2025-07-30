@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -15,21 +17,32 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import com.zaxxer.hikari.HikariDataSource;
+
+import lombok.extern.slf4j.Slf4j;
+
 @Configuration
 @EnableJpaRepositories(basePackages = "com.example.demo.domain")
 @EnableTransactionManagement
+@Slf4j
 public class DatabaseConfig {
 
     @Bean("masterDataSource")
-    @ConfigurationProperties("spring.datasource.master")
+    @ConfigurationProperties("spring.datasource.master.hikari")
     public DataSource masterDataSource() {
-        return DataSourceBuilder.create().build();
+
+        return DataSourceBuilder.create()
+                .type(HikariDataSource.class)
+                .build();
     }
 
     @Bean("slaveDataSource")
-    @ConfigurationProperties("spring.datasource.slave")
+    @ConfigurationProperties("spring.datasource.slave.hikari")
     public DataSource slaveDataSource() {
-        return DataSourceBuilder.create().build();
+
+        return DataSourceBuilder.create()
+                .type(HikariDataSource.class)
+                .build();
     }
 
     @Bean("routingDataSource")

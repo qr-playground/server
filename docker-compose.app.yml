@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    networks:
+      - app-network
+    # 외부 DB 연결을 위해 depends_on 제거
+    # depends_on:
+    #   - postgres-master
+    #   - postgres-slave
+
+networks:
+  app-network:
+    driver: bridge

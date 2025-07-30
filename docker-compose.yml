@@ -1,5 +1,11 @@
 version: "3.8"
 
+# 전체 통합 배포용 docker-compose.yml
+# 각 서비스를 개별 인스턴스에 배포할 때는 해당 docker-compose 파일을 사용하세요:
+# - docker-compose.app.yml (애플리케이션 서버)
+# - docker-compose.db.yml (데이터베이스)
+# - docker-compose.monitor.yml (모니터링)
+
 services:
   app:
     build: .

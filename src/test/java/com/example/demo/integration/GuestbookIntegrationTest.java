@@ -87,7 +87,7 @@ class GuestbookIntegrationTest {
                 .maxAttendeeCount(10)
                 .logoImageId(null)
                 .build();
-        QrcodeEventDto.Response eventResponse = qrcodeEventService.createQrcodeEvent(eventCreate, user);
+        QrcodeEventDto.Response eventResponse = qrcodeEventService.createQrcodeEvent(eventCreate, user.getPhoneNumber());
 
         String shortId = eventResponse.getQrcodeInfo().getQrcodeEventInfo().getShortId();
 
@@ -134,7 +134,7 @@ class GuestbookIntegrationTest {
                 .dotType("square")
                 .maxAttendeeCount(5)
                 .build();
-        QrcodeEventDto.Response eventResponse = qrcodeEventService.createQrcodeEvent(eventCreate, user);
+        QrcodeEventDto.Response eventResponse = qrcodeEventService.createQrcodeEvent(eventCreate, user.getPhoneNumber());
         String shortId = eventResponse.getQrcodeInfo().getQrcodeEventInfo().getShortId();
 
         log.info("shortId: {}", shortId);

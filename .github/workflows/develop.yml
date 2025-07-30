@@ -134,12 +134,12 @@ jobs:
             # -- 5) ECR 로그인 & 최신 이미지 pull --
             aws ecr get-login-password --region "$AWS_REGION" \
               | docker login --username AWS --password-stdin "$ECR_REGISTRY"
-            docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+            sudo docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
             # -- 6) 컨테이너 새 이미지로 재시작 --
             cd ~/deploy/docker-compose
-            docker-compose -f docker-compose.app.yml pull app
-            docker-compose -f docker-compose.app.yml up -d app
+            sudo docker-compose -f docker-compose.app.yml pull app
+            sudo docker-compose -f docker-compose.app.yml up -d app
 
             # -- 7) 사용되지 않는 이미지 정리 --
-            docker image prune -f
+            sudo docker image prune -f

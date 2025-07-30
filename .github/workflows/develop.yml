@@ -2,7 +2,7 @@ name: Deploy to AWS (Develop)
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ deploy ]
 
 env:
   AWS_REGION:    ${{ secrets.AWS_REGION }}

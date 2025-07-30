@@ -133,7 +133,7 @@ jobs:
 
             # -- 5) ECR 로그인 & 최신 이미지 pull --
             aws ecr get-login-password --region "$AWS_REGION" \
-              | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+              | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
             sudo docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
             # -- 6) 컨테이너 새 이미지로 재시작 --

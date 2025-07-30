@@ -20,10 +20,15 @@ jobs:
       # ❶ 시크릿에서 리소스(application-*.yml) 꺼내오기
       - name: Generate Spring config files
         run: |
-          mkdir -p src/main/resources
+              mkdir -p src/main/resources
 
-          echo "${{ secrets.APPLICATION_LOCAL_DOCKER_YML }}"  > src/main/resources/application-local-docker.yml
-          echo "${{ secrets.APPLICATION_TEST_YML }}" > src/main/resources/application-test.yml
+                  cat << 'EOF' > src/main/resources/application-local-docker.yml
+              ${{ secrets.APPLICATION_LOCAL_DOCKER_YML }}
+              EOF
+
+                  cat << 'EOF' > src/main/resources/application-test.yml
+              ${{ secrets.APPLICATION_TEST_YML }}
+              EOF
 
       # ─────────────────────────────────────────────────────
       - name: Set up JDK 21

@@ -83,14 +83,14 @@ jobs:
     steps:
       - name: SSH & Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         with:
           host:     ${{ secrets.EC2_APP_HOST }}      # ex) ec2-xx-xx-xx-xx.ap-northeast-2.compute.amazonaws.com
           username: ${{ secrets.EC2_APP_USER }}      # ex) ec2-user, ubuntu 등
           key:      ${{ secrets.EC2_APP_SSH_KEY }}   # private key
           port:     22
-          env:
-            AWS_REGION: ${{ secrets.AWS_REGION }}
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           script: |
             set -e
 

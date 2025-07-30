@@ -83,9 +83,6 @@ jobs:
     steps:
       - name: SSH & Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         with:
           host:     ${{ secrets.EC2_APP_HOST }}      # ex) ec2-xx-xx-xx-xx.ap-northeast-2.compute.amazonaws.com
           username: ${{ secrets.EC2_APP_USER }}      # ex) ec2-user, ubuntu 등
@@ -128,9 +125,9 @@ jobs:
             fi
 
             # -- 5) ECR 로그인 & 최신 이미지 pull --
-            aws ecr get-login-password --region $AWS_REGION \
-              | docker login --username AWS --password-stdin $ECR_REGISTRY
-            docker pull $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+            aws ecr get-login-password --region "${{ secrets.AWS_REGION }}" \
+              | docker login --username AWS --password-stdin "${{ steps.login-ecr.outputs.registry }}"
+            docker pull "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest"
 
             # -- 6) 컨테이너 새 이미지로 재시작 --
             cd ~/deploy/docker-compose

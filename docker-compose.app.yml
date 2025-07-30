@@ -1,8 +1,21 @@
 version: "3.8"
 
 services:
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"                   # 외부 80 → nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    networks:
+      - app-network
+
   app:
-    build: .
+    image: "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
     container_name: app
     ports:
       - "8080:8080"
@@ -18,10 +31,6 @@ services:
           memory: 512M
     networks:
       - app-network
-    # 외부 DB 연결을 위해 depends_on 제거
-    # depends_on:
-    #   - postgres-master
-    #   - postgres-slave
 
 networks:
   app-network:

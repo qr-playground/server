@@ -22,54 +22,66 @@ import com.example.demo.domain.user.repository.UserRepository;
 import com.example.demo.domain.user.service.UserService;
 import com.example.demo.global.security.jwt.JwtProperties;
 import com.example.demo.global.security.jwt.JwtTokenProvider;
+import com.example.demo.global.service.SmsService;
+import com.github.benmanes.caffeine.cache.Cache;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+        @Mock
+        private UserRepository userRepository;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
+        @Mock
+        private PasswordEncoder passwordEncoder;
 
-    @Mock
-    private JwtTokenProvider jwtTokenProvider;
+        @Mock
+        private JwtTokenProvider jwtTokenProvider;
 
-    @Mock
-    private JwtProperties jwtProperties;
+        @Mock
+        private JwtProperties jwtProperties;
 
-    @Mock
-    private RefreshTokenRepository refreshTokenRepository;
+        @Mock
+        private RefreshTokenRepository refreshTokenRepository;
 
-    @Mock
-    private UserService userService;
+        @Mock
+        private UserService userService;
 
-    @InjectMocks
-    private AuthService authService;
+        @Mock
+        private SmsService smsService;
 
-    @Test
-    public void signup_success() {
-        // given
-        AuthDto.Signup signupDto = new AuthDto.Signup("01012345678", "password");
-        String encodedPassword = "encoded_password";
-        User savedUser = new User("01012345678", encodedPassword, Role.USER);
+        @Mock
+        private Cache<String, Boolean> verifiedPhoneNumberCache;
 
-        // 핸드폰 번호로 사용자 없음
-        when(userService.getUserByPhoneNumber(signupDto.getPhoneNumber()))
-                .thenReturn(Optional.empty());
-        // 패스워드 인코딩
-        when(passwordEncoder.encode(signupDto.getPassword()))
-                .thenReturn(encodedPassword);
-        // 새 사용자 저장
-        when(userService.createUser(any(User.class)))
-                .thenReturn(savedUser);
+        @InjectMocks
+        private AuthService authService;
 
-        // when
-        AuthDto.Response response = authService.signup(signupDto);
+        @Test
+        public void signup_success() {
+                // given
+                AuthDto.Signup signupDto = new AuthDto.Signup("01012345678", "password");
+                String encodedPassword = "encoded_password";
+                User savedUser = new User("01012345678", encodedPassword, Role.USER);
 
-        // then
-        assertThat(response.getUserInfo().getPhoneNumber()).isEqualTo("01012345678");
-        assertThat(response.getUserInfo().getRole()).isEqualTo(Role.USER);
-    }
+                // 핸드폰 번호 인증 확인 (캐시에서 true 반환)
+                when(verifiedPhoneNumberCache.getIfPresent(signupDto.getPhoneNumber()))
+                                .thenReturn(true);
+
+                // 핸드폰 번호로 사용자 없음
+                when(userService.getUserByPhoneNumber(signupDto.getPhoneNumber()))
+                                .thenReturn(Optional.empty());
+                // 패스워드 인코딩
+                when(passwordEncoder.encode(signupDto.getPassword()))
+                                .thenReturn(encodedPassword);
+                // 새 사용자 저장
+                when(userService.createUser(any(User.class)))
+                                .thenReturn(savedUser);
+
+                // when
+                AuthDto.Response response = authService.signup(signupDto);
+
+                // then
+                assertThat(response.getUserInfo().getPhoneNumber()).isEqualTo("01012345678");
+                assertThat(response.getUserInfo().getRole()).isEqualTo(Role.USER);
+        }
 
 }

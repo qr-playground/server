@@ -97,7 +97,7 @@ jobs:
             export AWS_REGION="${{ secrets.AWS_REGION }}"
             export ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
             export ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"
-
+            
             # -- 1) Docker 설치 확인/설치 --
             if ! command -v docker >/dev/null 2>&1; then
               sudo yum update -y
@@ -123,11 +123,11 @@ jobs:
             fi
 
             # -- 4) 애플리케이션용 docker-compose 코드 동기화 --
-            if [ ! -d ~/deploy/docker-compose ]; then
+            if [ ! -d ~/deploy ]; then
               git clone https://github.com/qr-playground/server.git \
-                --branch develop --single-branch ~/deploy/docker-compose
+                --branch develop --single-branch ~/deploy
             else
-              cd ~/deploy/docker-compose
+              cd ~/deploy
               git pull origin develop
             fi
 
@@ -137,7 +137,7 @@ jobs:
             sudo docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
             # -- 6) 컨테이너 새 이미지로 재시작 --
-            cd ~/deploy/docker-compose
+            cd ~/deploy
 
             cat << 'EOF' > .env
             ${{ secrets.APPLICATION_ENV }}

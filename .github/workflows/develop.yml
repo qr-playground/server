@@ -21,12 +21,9 @@ jobs:
       - name: Generate Spring config files
         run: |
               mkdir -p src/main/resources
-                  cat << 'EOF' > src/main/resources/application.yml
-              ${{ secrets.APPLICATION_YML_DOCKER_ACTIVE }}
-              EOF
 
-                  cat << 'EOF' > src/main/resources/application-local-docker.yml
-              ${{ secrets.APPLICATION_LOCAL_DOCKER_YML }}
+                  cat << 'EOF' > src/main/resources/application.yml
+              ${{ secrets.APPLICATION_DEV_YML }}
               EOF
 
                   cat << 'EOF' > src/main/resources/application-test.yml
@@ -79,75 +76,75 @@ jobs:
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
 
-  # deploy:
-  #   needs: build_and_push
-  #   runs-on: ubuntu-latest
+  deploy:
+    needs: build_and_push
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: SSH & Deploy to EC2
-  #       uses: appleboy/ssh-action@v0.1.6
-  #       with:
-  #         host:     ${{ secrets.EC2_APP_HOST }}      # ex) ec2-xx-xx-xx-xx.ap-northeast-2.compute.amazonaws.com
-  #         username: ${{ secrets.EC2_APP_USER }}      # ex) ec2-user, ubuntu 등
-  #         key:      ${{ secrets.EC2_APP_SSH_KEY }}   # private key
-  #         port:     22
-  #         script: |
-  #           set -e
+    steps:
+      - name: SSH & Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host:     ${{ secrets.EC2_APP_HOST }}      # ex) ec2-xx-xx-xx-xx.ap-northeast-2.compute.amazonaws.com
+          username: ${{ secrets.EC2_APP_USER }}      # ex) ec2-user, ubuntu 등
+          key:      ${{ secrets.EC2_APP_SSH_KEY }}   # private key
+          port:     22
+          script: |
+            set -e
 
 
-  #           export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
-  #           export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-  #           export AWS_REGION="${{ secrets.AWS_REGION }}"
-  #           export ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
-  #           export ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"
+            export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+            export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+            export AWS_REGION="${{ secrets.AWS_REGION }}"
+            export ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
+            export ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"
 
-  #           # -- 1) Docker 설치 확인/설치 --
-  #           if ! command -v docker >/dev/null 2>&1; then
-  #             sudo yum update -y
-  #             sudo yum install -y docker
-  #             sudo systemctl enable --now docker
-  #           fi
+            # -- 1) Docker 설치 확인/설치 --
+            if ! command -v docker >/dev/null 2>&1; then
+              sudo yum update -y
+              sudo yum install -y docker
+              sudo systemctl enable --now docker
+            fi
 
-  #           # -- 2) docker-compose 설치 확인/설치 --
-  #           if ! command -v docker-compose >/dev/null 2>&1; then
-  #             sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" \
-  #               -o /usr/local/bin/docker-compose
-  #             sudo chmod +x /usr/local/bin/docker-compose
-  #           fi
+            # -- 2) docker-compose 설치 확인/설치 --
+            if ! command -v docker-compose >/dev/null 2>&1; then
+              sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" \
+                -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            fi
 
-  #           # -- 3) AWS CLI 설치 확인/설치 --
-  #           if ! command -v aws >/dev/null 2>&1; then
-  #             sudo yum install -y awscli
-  #           fi
+            # -- 3) AWS CLI 설치 확인/설치 --
+            if ! command -v aws >/dev/null 2>&1; then
+              sudo yum install -y awscli
+            fi
 
-  #           # -- Git 설치 확인/설치 --
-  #           if ! command -v git >/dev/null 2>&1; then
-  #             sudo yum install -y git
-  #           fi
+            # -- Git 설치 확인/설치 --
+            if ! command -v git >/dev/null 2>&1; then
+              sudo yum install -y git
+            fi
 
-  #           # -- 4) 애플리케이션용 docker-compose 코드 동기화 --
-  #           if [ ! -d ~/deploy/docker-compose ]; then
-  #             git clone https://github.com/qr-playground/server.git \
-  #               --branch develop --single-branch ~/deploy/docker-compose
-  #           else
-  #             cd ~/deploy/docker-compose
-  #             git pull origin develop
-  #           fi
+            # -- 4) 애플리케이션용 docker-compose 코드 동기화 --
+            if [ ! -d ~/deploy/docker-compose ]; then
+              git clone https://github.com/qr-playground/server.git \
+                --branch develop --single-branch ~/deploy/docker-compose
+            else
+              cd ~/deploy/docker-compose
+              git pull origin develop
+            fi
 
-  #           # -- 5) ECR 로그인 & 최신 이미지 pull --
-  #           aws ecr get-login-password --region "$AWS_REGION" \
-  #             | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
-  #           sudo docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+            # -- 5) ECR 로그인 & 최신 이미지 pull --
+            aws ecr get-login-password --region "$AWS_REGION" \
+              | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            sudo docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-  #           # -- 6) 컨테이너 새 이미지로 재시작 --
-  #           cd ~/deploy/docker-compose
+            # -- 6) 컨테이너 새 이미지로 재시작 --
+            cd ~/deploy/docker-compose
 
-  #           cat << 'EOF' > .env
-  #           ${{ secrets.APPLICATION_ENV }}
-  #           EOF
+            cat << 'EOF' > .env
+            ${{ secrets.APPLICATION_ENV }}
+            EOF
 
-  #           sudo docker-compose -f docker-compose.app.yml pull app
-  #           sudo docker-compose -f docker-compose.app.yml up -d app
+            sudo docker-compose -f docker-compose.app.yml pull app
+            sudo docker-compose -f docker-compose.app.yml up -d app
 
-  #           # -- 7) 사용되지 않는 이미지 정리 --
-  #           sudo docker image prune -f
+            # -- 7) 사용되지 않는 이미지 정리 --
+            sudo docker image prune -f

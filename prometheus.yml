@@ -6,11 +6,10 @@ scrape_configs:
   - job_name: "postgres-exporter"
     metrics_path: "/metrics"
     static_configs:
-      - targets: ["postgres_exporter:9187"]
+      - targets: ["postgres_exporter.monitoring.local:9187"]
 
-  # Spring Boot 애플리케이션을 수집하는 새로운 job
   - job_name: "app"
     scrape_interval: 5s
     metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ["app:8080"]
+      - targets: ["app.monitoring.local:8080"]

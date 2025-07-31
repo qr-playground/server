@@ -86,7 +86,7 @@ services:
     volumes:
       - postgres_master_data:/var/lib/postgresql/data
       - ./init-master.sql:/docker-entrypoint-initdb.d/01-init-master.sql
-      - ./pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - ./pg_hba.conf:/var/lib/postgresql/data_pg/pg_hba.conf
     ports:
       - "5555:5432"
     networks:
@@ -110,7 +110,7 @@ services:
       -c wal_keep_size=1GB
       -c max_connections=200
       -c listen_addresses='*'
-      -c hba_file=/var/lib/postgresql/data/pg_hba.conf
+      -c hba_file=/var/lib/postgresql/data_pg/pg_hba.conf
 
   postgres-slave:
     image: groonga/pgroonga:4.0.1-debian-16

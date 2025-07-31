@@ -22,7 +22,7 @@ jobs:
         run: |
               mkdir -p src/main/resources
 
-                  cat << 'EOF' > src/main/resources/application.yml
+                  cat << 'EOF' > src/main/resources/application-dev.yml
               ${{ secrets.APPLICATION_DEV_YML }}
               EOF
 

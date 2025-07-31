@@ -21,8 +21,11 @@ jobs:
       - name: Generate Spring config files
         run: |
               mkdir -p src/main/resources
-
                   cat << 'EOF' > src/main/resources/application-local.yml
+              ${{ secrets.APPLICATION_LOCAL_YML }}
+              EOF
+
+                  cat << 'EOF' > src/main/resources/application-local-docker.yml
               ${{ secrets.APPLICATION_LOCAL_DOCKER_YML }}
               EOF
 

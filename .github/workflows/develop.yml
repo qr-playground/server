@@ -143,6 +143,8 @@ jobs:
             ${{ secrets.APPLICATION_ENV }}
             EOF
 
+            sudo docker-compose -f docker-compose.app.yml down app || true
+
             sudo docker-compose -f docker-compose.app.yml pull app
             sudo docker-compose -f docker-compose.app.yml up -d app
 

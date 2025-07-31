@@ -20,8 +20,8 @@ public interface StatisticRepository extends JpaRepository<Statistic, UUID> {
                 s.totalUsers,
                 s.totalQrcodeEvent,
                 s.totalGuestbooks,
-                s.avgQrcodeEventsPerUser,
-                s.avgGuestbooksPerQrcodeEvent
+                COALESCE(s.avgQrcodeEventsPerUser, 0),
+                COALESCE(s.avgGuestbooksPerQrcodeEvent, 0)
             FROM (
                 SELECT
                     COUNT(DISTINCT u.id) AS totalUsers,

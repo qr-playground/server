@@ -22,12 +22,13 @@ jobs:
         run: |
               mkdir -p src/main/resources
 
-                  cat << 'EOF' > src/main/resources/application-dev.yml
-              ${{ secrets.APPLICATION_DEV_YML }}
+                  cat << 'EOF' > src/main/resources/application-dev.yaml
+              ${{ secrets.APPLICATION_DEV_YAML }}
               EOF
 
-                  cat << 'EOF' > src/main/resources/application-test.yml
-              ${{ secrets.APPLICATION_TEST_YML }}
+                  cat << 'EOF' > src/main/resources/application-test.yaml
+
+              ${{ secrets.APPLICATION_TEST_YAML }}
               EOF
 
                   cat << 'EOF' > src/main/.env

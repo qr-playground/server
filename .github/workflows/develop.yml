@@ -146,8 +146,7 @@ jobs:
 
             sudo docker-compose -f docker-compose.app.yml down 
 
-            sudo docker-compose -f docker-compose.app.yml pull app
-            sudo docker-compose -f docker-compose.app.yml up -d app
+            sudo docker-compose -f docker-compose.app.yml up -d 
 
             # -- 7) 사용되지 않는 이미지 정리 --
             sudo docker image prune -f

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.example.demo.global.error.exception.CustomException;
 import com.example.demo.global.error.exception.RateLimitException;
@@ -116,6 +117,16 @@ public class GlobalExceptionHandler {
                                 .status(code.getStatus())
                                 .body(response);
         }
+
+        @ExceptionHandler(NoResourceFoundException.class)
+        public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex,
+                        HttpServletRequest request) {
+                log.error("NoResourceFoundException 예외 발생: {}", ex.getMessage());
+                ErrorCode code = ErrorCode.COMMON_RESOURCE_NOT_FOUND;
+                ErrorResponse response = ErrorResponse.of(code, request.getRequestURI());
+                return ResponseEntity.status(code.getStatus()).body(response);
+        }
+
 
         // 처리되지 않은 모든 예외를 처리하는 기본 핸들러
         @ExceptionHandler(Exception.class)

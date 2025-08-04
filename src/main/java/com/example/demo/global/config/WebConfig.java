@@ -1,5 +1,7 @@
 package com.example.demo.global.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -17,8 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${app.frontend.url}")
-    private String frontendUrl;
+    @Value("${app.frontend.urls}")
+    private List<String> frontendUrls;
 
     private final LoggingInterceptor loggingInterceptor;
 
@@ -27,9 +29,9 @@ public class WebConfig implements WebMvcConfigurer {
     // CORS 설정
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        log.info("frontendUrl: {}", frontendUrl);
+        log.info("frontendUrls: {}", frontendUrls);
         registry.addMapping("/**")
-                .allowedOrigins(frontendUrl) // 프로퍼티에서 가져온 프론트엔드 개발 서버 주소
+                .allowedOrigins(frontendUrls.toArray(new String[0])) // 여러 프론트엔드 URL 허용
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
@@ -41,7 +43,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(loggingInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns("/swagger-ui/**", "/v3/api-docs/**", "/actuator/**");
-        
+
         // Rate Limit 인터셉터
         registry.addInterceptor(rateLimitInterceptor)
                 .addPathPatterns("/api/**");

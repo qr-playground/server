@@ -17,7 +17,8 @@ public enum ErrorCode {
     COMMON_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E0006", "서버 오류가 발생했습니다"),
     COMMON_QUERY_FAILED(HttpStatus.BAD_REQUEST, "E0007", "쿼리 실행 실패"),
     COMMON_DB_CONNECTION_FAILED(HttpStatus.BAD_REQUEST, "E0009", "DB 연결 실패"),
-
+    COMMON_RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "E0010", "해당 경로 api가 없습니다."),
+            
     // AUTH 관련 에러 1000 ~ 1999 --------------------------------
     AUTH_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E1000", "인증 오류가 발생했습니다"),
     AUTH_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "E1001", "잘못된 입력값입니다"),

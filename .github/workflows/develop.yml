@@ -2,151 +2,185 @@ name: Deploy to AWS (Develop)
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
 
+# 동시 실행 제어 설정
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true # ‼️ 동시 실행 취소 설정
+
+# 환경 변수 설정 (GitHub Secrets에서 가져옴)
 env:
-  AWS_REGION:    ${{ secrets.AWS_REGION }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
 
 jobs:
+  # 🚀 Docker 이미지 빌드 및 ECR 푸시
   build_and_push:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ 소스 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ─────────────────────────────────────────────────────
-      # ❶ 시크릿에서 리소스(application-*.yml) 꺼내오기
+      # 2️⃣ Spring Boot 설정 파일 생성
+      # GitHub Secrets에 저장된 설정 파일들을 실제 파일로 생성
       - name: Generate Spring config files
         run: |
-              mkdir -p src/main/resources
+          # resources 디렉토리 생성
+          mkdir -p src/main/resources
 
-                  cat << 'EOF' > src/main/resources/application-dev.yaml
-              ${{ secrets.APPLICATION_DEV_YAML }}
-              EOF
+          # 개발 환경 설정 파일 생성
+          cat << 'EOF' > src/main/resources/application-dev.yaml
+          ${{ secrets.APPLICATION_DEV_YAML }}
+          EOF
 
-                  cat << 'EOF' > src/main/resources/application-test.yaml
+          # 테스트 환경 설정 파일 생성
+          cat << 'EOF' > src/main/resources/application-test.yaml
+          ${{ secrets.APPLICATION_TEST_YAML }}
+          EOF
 
-              ${{ secrets.APPLICATION_TEST_YAML }}
-              EOF
+          # 환경 변수 파일 생성
+          cat << 'EOF' > src/main/.env
+          ${{ secrets.APPLICATION_ENV }}
+          EOF
 
-                  cat << 'EOF' > src/main/.env
-              ${{ secrets.APPLICATION_ENV }}
-              EOF
-
-      # ─────────────────────────────────────────────────────
+      # 3️⃣ Java 개발 환경 설정
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
 
+      # 4️⃣ Gradle을 사용한 애플리케이션 빌드
       - name: Build with Gradle
         run: ./gradlew build --no-daemon
 
+      # 5️⃣ AWS 자격 증명 설정
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ env.AWS_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
+      # 6️⃣ Amazon ECR 로그인
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      # ─────────────────────────────────────────────────────
+      # 7️⃣ Docker 이미지 빌드 및 태그 설정
       - name: Build and tag Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG:    ${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
+          # 커밋 해시를 태그로 하는 이미지 빌드
           docker build \
             -t $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG \
             .
+          # latest 태그도 함께 설정 (최신 버전 표시용)
           docker tag \
             $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG \
             $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
 
+      # 8️⃣ ECR에 Docker 이미지 푸시
       - name: Push to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG:    ${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
+          # 커밋 해시 태그 이미지 푸시
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+          # latest 태그 이미지 푸시
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
 
+  # 🚀 EC2 서버에 배포
   deploy:
     needs: build_and_push
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ EC2 서버에 SSH 접속하여 배포 스크립트 실행
       - name: SSH & Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host:     ${{ secrets.EC2_APP_HOST }}      # ex) ec2-xx-xx-xx-xx.ap-northeast-2.compute.amazonaws.com
-          username: ${{ secrets.EC2_APP_USER }}      # ex) ec2-user, ubuntu 등
-          key:      ${{ secrets.EC2_APP_SSH_KEY }}   # private key
-          port:     22
+          host: ${{ secrets.EC2_APP_HOST }}
+          username: ${{ secrets.EC2_APP_USER }}
+          key: ${{ secrets.EC2_APP_SSH_KEY }}
+          port: 22
           script: |
             set -e
 
+            # 1️⃣ 환경 변수 설정 및 필수 도구 설치
 
             export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
             export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
             export AWS_REGION="${{ secrets.AWS_REGION }}"
             export ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
             export ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"
-            
-            # -- 1) Docker 설치 확인/설치 --
+
             if ! command -v docker >/dev/null 2>&1; then
+              echo "Docker 설치 중..."
               sudo yum update -y
               sudo yum install -y docker
               sudo systemctl enable --now docker
             fi
 
-            # -- 2) docker-compose 설치 확인/설치 --
             if ! command -v docker-compose >/dev/null 2>&1; then
+              echo "Docker Compose 설치 중..."
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" \
                 -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
 
-            # -- 3) AWS CLI 설치 확인/설치 --
             if ! command -v aws >/dev/null 2>&1; then
+              echo "AWS CLI 설치 중..."
               sudo yum install -y awscli
             fi
 
-            # -- Git 설치 확인/설치 --
             if ! command -v git >/dev/null 2>&1; then
+              echo "Git 설치 중..."
               sudo yum install -y git
             fi
 
-            # -- 4) 애플리케이션용 docker-compose 코드 동기화 --
+            # 2️⃣ 배포용 코드 동기화
+
             if [ ! -d ~/deploy ]; then
+              echo "배포용 코드 클론 중..."
               git clone https://github.com/qr-playground/server.git \
                 --branch develop --single-branch ~/deploy
             else
+              echo "배포용 코드 업데이트 중..."
               cd ~/deploy
               git pull origin develop
             fi
 
-            # -- 5) ECR 로그인 & 최신 이미지 pull --
+            # 3️⃣ Docker 이미지 업데이트
+
+            echo "ECR 로그인 및 최신 이미지 다운로드 중..."
             aws ecr get-login-password --region "$AWS_REGION" \
               | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
             sudo docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
 
-            # -- 6) 컨테이너 새 이미지로 재시작 --
-            cd ~/deploy
+            # 4️⃣ 애플리케이션 배포
 
+            cd ~/deploy
+            echo "환경 변수 파일 생성 중..."
             cat << 'EOF' > .env
             ${{ secrets.APPLICATION_ENV }}
             EOF
 
+            echo "기존 컨테이너 중지 중..."
             sudo docker-compose -f docker-compose.app.yml down 
 
+            echo "새로운 컨테이너 시작 중..."
             sudo docker-compose -f docker-compose.app.yml up -d 
 
-            # -- 7) 사용되지 않는 이미지 정리 --
+            # 5️⃣ 정리 작업
+
+            echo "사용되지 않는 Docker 이미지 정리 중..."
             sudo docker image prune -f
+
+            echo "배포 완료!"

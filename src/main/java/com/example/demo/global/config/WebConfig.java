@@ -19,8 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${app.frontend.urls}")
-    private List<String> frontendUrls;
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
+    @Value("${app.frontend.redirect-url}")
+    private String frontendRedirectUrl;
 
     private final LoggingInterceptor loggingInterceptor;
 
@@ -29,9 +32,10 @@ public class WebConfig implements WebMvcConfigurer {
     // CORS 설정
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        log.info("frontendUrls: {}", frontendUrls);
+        log.info("frontendUrl: {}", frontendUrl);
+        log.info("frontendRedirectUrl: {}", frontendRedirectUrl);
         registry.addMapping("/**")
-                .allowedOrigins(frontendUrls.toArray(new String[0])) // 여러 프론트엔드 URL 허용
+                .allowedOrigins(frontendUrl, frontendRedirectUrl) // 여러 프론트엔드 URL 허용
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

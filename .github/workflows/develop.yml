@@ -29,22 +29,22 @@ jobs:
       - name: Generate Spring config files
         run: |
           # resources 디렉토리 생성
-              mkdir -p src/main/resources
+          mkdir -p src/main/resources
 
           # 개발 환경 설정 파일 생성
-                  cat << 'EOF' > src/main/resources/application-dev.yaml
-              ${{ secrets.APPLICATION_DEV_YAML }}
-              EOF
+          cat << 'EOF' > src/main/resources/application-dev.yaml
+          ${{ secrets.APPLICATION_DEV_YAML }}
+          EOF
 
           # 테스트 환경 설정 파일 생성
-                  cat << 'EOF' > src/main/resources/application-test.yaml
-              ${{ secrets.APPLICATION_TEST_YAML }}
-              EOF
+          cat << 'EOF' > src/main/resources/application-test.yaml
+          ${{ secrets.APPLICATION_TEST_YAML }}
+          EOF
 
           # 환경 변수 파일 생성
-                  cat << 'EOF' > src/main/.env
-              ${{ secrets.APPLICATION_ENV }}
-              EOF
+          cat << 'EOF' > src/main/.env
+          ${{ secrets.APPLICATION_ENV }}
+          EOF
 
       # 3️⃣ Java 개발 환경 설정
       - name: Set up JDK 21
@@ -168,7 +168,7 @@ jobs:
 
             cd ~/deploy
 
-                        # 현재 활성 환경 확인
+            # 현재 활성 환경 확인
             echo "🔍 현재 실행 중인 컨테이너 확인:"
             sudo docker ps | grep -E "(app-blue|app-green)" || echo "실행 중인 앱 컨테이너 없음"
 
@@ -194,7 +194,7 @@ jobs:
               echo "🚀 $NEW_ENV 환경에 새 버전 배포 시작..."
               
               # 환경 변수 파일 생성
-            cat << 'EOF' > .env
+              cat << 'EOF' > .env
             ${{ secrets.APPLICATION_ENV }}
             EOF
 

@@ -6,19 +6,19 @@ services:
     container_name: nginx
     restart: always
     ports:
-      - "80:80"                   # 외부 80 → nginx
+      - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - app
+      - ./nginx-upstream.conf:/etc/nginx/conf.d/upstream.conf:ro # 동적 업스트림 설정 추가
     networks:
       - app-network
 
-  app:
-    image: "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
-    container_name: app
+  # 블루 환경 (기본 활성)
+  app-blue:
+    image: "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG:-latest}"
+    container_name: app-blue
     ports:
-      - "8080:8080"
+      - "8080:8080" # 블루 포트
     env_file:
       - .env
     environment:
@@ -26,13 +26,36 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: 2G
+          cpus: "1"
+          memory: 1G
         reservations:
           cpus: "0.5"
           memory: 512M
     networks:
       - app-network
+
+  # 그린 환경 (대기)
+  app-green:
+    image: "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG:-latest}"
+    container_name: app-green
+    ports:
+      - "8081:8080" # 그린 포트
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    networks:
+      - app-network
+    profiles:
+      - green # 기본적으로는 시작하지 않음
 
 networks:
   app-network:

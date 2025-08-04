@@ -29,22 +29,22 @@ jobs:
       - name: Generate Spring config files
         run: |
           # resources 디렉토리 생성
-          mkdir -p src/main/resources
+              mkdir -p src/main/resources
 
           # 개발 환경 설정 파일 생성
-          cat << 'EOF' > src/main/resources/application-dev.yaml
-          ${{ secrets.APPLICATION_DEV_YAML }}
-          EOF
+                  cat << 'EOF' > src/main/resources/application-dev.yaml
+              ${{ secrets.APPLICATION_DEV_YAML }}
+              EOF
 
           # 테스트 환경 설정 파일 생성
-          cat << 'EOF' > src/main/resources/application-test.yaml
-          ${{ secrets.APPLICATION_TEST_YAML }}
-          EOF
+                  cat << 'EOF' > src/main/resources/application-test.yaml
+              ${{ secrets.APPLICATION_TEST_YAML }}
+              EOF
 
           # 환경 변수 파일 생성
-          cat << 'EOF' > src/main/.env
-          ${{ secrets.APPLICATION_ENV }}
-          EOF
+                  cat << 'EOF' > src/main/.env
+              ${{ secrets.APPLICATION_ENV }}
+              EOF
 
       # 3️⃣ Java 개발 환경 설정
       - name: Set up JDK 21
@@ -168,9 +168,24 @@ jobs:
 
             cd ~/deploy
 
-            # 현재 활성 환경 확인
-            CURRENT_ENV=$(curl -f -s http://localhost/health/blue > /dev/null 2>&1 && echo "blue" || echo "green")
-            NEW_ENV=$([ "$CURRENT_ENV" = "blue" ] && echo "green" || echo "blue")
+                        # 현재 활성 환경 확인
+            echo "🔍 현재 실행 중인 컨테이너 확인:"
+            sudo docker ps | grep -E "(app-blue|app-green)" || echo "실행 중인 앱 컨테이너 없음"
+
+            # 환경 감지
+            CURRENT_ENV="none"
+            if curl -f -s http://localhost/health/blue > /dev/null 2>&1; then
+                CURRENT_ENV="blue"
+                NEW_ENV="green"
+            elif curl -f -s http://localhost/health/green > /dev/null 2>&1; then
+                CURRENT_ENV="green"
+                NEW_ENV="blue"
+            else
+                # 첫 배포 또는 모든 환경이 다운된 상태
+                CURRENT_ENV="none"
+                NEW_ENV="blue"  # 첫 배포는 블루부터
+                echo "🎯 첫 배포 또는 전체 다운 상태 감지"
+            fi
 
             echo "🔵🟢 현재 환경: $CURRENT_ENV, 새 환경: $NEW_ENV"
 
@@ -179,10 +194,10 @@ jobs:
               echo "🚀 $NEW_ENV 환경에 새 버전 배포 시작..."
               
               # 환경 변수 파일 생성
-              cat << 'EOF' > .env
+            cat << 'EOF' > .env
             ${{ secrets.APPLICATION_ENV }}
             EOF
-              
+
               # 새 환경에만 새 이미지 배포
               if [ "$NEW_ENV" = "blue" ]; then
                 echo "🔵 블루 환경 배포 중..."
@@ -194,11 +209,26 @@ jobs:
               
               # 새 환경 헬스체크 (5분)
               echo "🏥 $NEW_ENV 환경 헬스체크 시작..."
+              
+              # 디버깅: 컨테이너 상태 확인
+              echo "📋 컨테이너 상태 확인:"
+              sudo docker ps | grep -E "(nginx|app-blue|app-green)"
+              
+              # 디버깅: Nginx 설정 확인
+              echo "📋 Nginx 업스트림 설정:"
+              sudo docker exec nginx cat /etc/nginx/conf.d/upstream.conf || echo "업스트림 설정 파일 없음"
+              
               sleep 30
               
               for i in {1..30}; do
-                if curl -f -s "http://localhost/health/$NEW_ENV" > /dev/null 2>&1; then
+                # 디버깅: 헬스체크 응답 확인
+                echo "🔍 헬스체크 시도 $i/30: http://localhost/health/$NEW_ENV"
+                HEALTH_RESPONSE=$(curl -f -s "http://localhost/health/$NEW_ENV" 2>&1)
+                HEALTH_STATUS=$?
+                
+                if [ $HEALTH_STATUS -eq 0 ]; then
                   echo "✅ $NEW_ENV 환경 헬스체크 성공! (시도 $i/30)"
+                  echo "📄 응답: $HEALTH_RESPONSE"
                   
                   # 트래픽 전환 (Nginx 업스트림 변경)
                   switch_traffic_to_new_env
@@ -211,14 +241,23 @@ jobs:
                     # 이전 환경 정리
                     cleanup_old_env
                     return 0
-                  else
-                    echo "❌ 트래픽 전환 실패"
-                    return 1
-                  fi
+                                  else
+                  echo "❌ 트래픽 전환 실패"
+                  return 1
                 fi
-                echo "⏳ $NEW_ENV 헬스체크 재시도 중... ($i/30)"
-                sleep 10
-              done
+              else
+                echo "❌ 헬스체크 실패 (상태코드: $HEALTH_STATUS)"
+                echo "📄 에러 응답: $HEALTH_RESPONSE"
+                
+                # 추가 디버깅: 컨테이너 로그 확인
+                if [ $i -eq 5 ] || [ $i -eq 15 ]; then
+                  echo "📋 $NEW_ENV 컨테이너 로그 (최근 10줄):"
+                  sudo docker logs --tail 10 "app-$NEW_ENV" || echo "컨테이너 로그 확인 실패"
+                fi
+              fi
+              echo "⏳ $NEW_ENV 헬스체크 재시도 중... ($i/30)"
+              sleep 10
+            done
               
               echo "❌ $NEW_ENV 환경 헬스체크 실패"
               return 1

@@ -30,22 +30,18 @@ jobs:
         run: |
           # resources 디렉토리 생성
           mkdir -p src/main/resources
-
           # 개발 환경 설정 파일 생성
           cat << 'EOF' > src/main/resources/application-dev.yaml
           ${{ secrets.APPLICATION_DEV_YAML }}
           EOF
-
           # 테스트 환경 설정 파일 생성
           cat << 'EOF' > src/main/resources/application-test.yaml
           ${{ secrets.APPLICATION_TEST_YAML }}
           EOF
-
           # 환경 변수 파일 생성
           cat << 'EOF' > src/main/.env
           ${{ secrets.APPLICATION_ENV }}
           EOF
-
       # 3️⃣ Java 개발 환경 설정
       - name: Set up JDK 21
         uses: actions/setup-java@v3
@@ -84,7 +80,6 @@ jobs:
           docker tag \
             $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG \
             $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
-
       # 8️⃣ ECR에 Docker 이미지 푸시
       - name: Push to Amazon ECR
         env:
@@ -95,7 +90,6 @@ jobs:
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
           # latest 태그 이미지 푸시
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
-
   # 🚀 EC2 서버에 배포
   deploy:
     needs: build_and_push
@@ -112,41 +106,33 @@ jobs:
           port: 22
           script: |
             set -e
-
             # 1️⃣ 환경 변수 설정 및 필수 도구 설치
-
             export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
             export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
             export AWS_REGION="${{ secrets.AWS_REGION }}"
             export ECR_REGISTRY="${{ secrets.ECR_REGISTRY }}"
             export ECR_REPOSITORY="${{ secrets.ECR_REPOSITORY }}"
-
             if ! command -v docker >/dev/null 2>&1; then
               echo "Docker 설치 중..."
               sudo yum update -y
               sudo yum install -y docker
               sudo systemctl enable --now docker
             fi
-
             if ! command -v docker-compose >/dev/null 2>&1; then
               echo "Docker Compose 설치 중..."
               sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" \
                 -o /usr/local/bin/docker-compose
               sudo chmod +x /usr/local/bin/docker-compose
             fi
-
             if ! command -v aws >/dev/null 2>&1; then
               echo "AWS CLI 설치 중..."
               sudo yum install -y awscli
             fi
-
             if ! command -v git >/dev/null 2>&1; then
               echo "Git 설치 중..."
               sudo yum install -y git
             fi
-
             # 2️⃣ 배포용 코드 동기화
-
             if [ ! -d ~/deploy ]; then
               echo "배포용 코드 클론 중..."
               git clone https://github.com/qr-playground/server.git \
@@ -156,204 +142,169 @@ jobs:
               cd ~/deploy
               git pull origin develop
             fi
-
             # 3️⃣ Docker 이미지 업데이트
-
             echo "ECR 로그인 및 최신 이미지 다운로드 중..."
             aws ecr get-login-password --region "$AWS_REGION" \
               | sudo docker login --username AWS --password-stdin "$ECR_REGISTRY"
             sudo docker pull "$ECR_REGISTRY/$ECR_REPOSITORY:latest"
+            # 4️⃣ 블루-그린 배포 (무중단 배포)
+cd ~/deploy
 
-                        # 4️⃣ 블루-그린 배포 (무중단 배포)
+# 현재 활성 환경 확인
+CURRENT_ENV="none"
+if curl -f -s http://localhost/health/blue > /dev/null 2>&1; then
+    CURRENT_ENV="blue"
+    NEW_ENV="green"
+elif curl -f -s http://localhost/health/green > /dev/null 2>&1; then
+    CURRENT_ENV="green"
+    NEW_ENV="blue"
+else
+    # 첫 배포 - 블루부터 시작
+    CURRENT_ENV="none"
+    NEW_ENV="blue"
+fi
 
-            cd ~/deploy
+echo "🔵🟢 현재 환경: $CURRENT_ENV, 새 환경: $NEW_ENV"
 
-            # 현재 활성 환경 확인
-            echo "🔍 현재 실행 중인 컨테이너 확인:"
-            sudo docker ps | grep -E "(app-blue|app-green)" || echo "실행 중인 앱 컨테이너 없음"
+# 환경 변수 파일 생성
+cat << 'EOF' > .env
+${{ secrets.APPLICATION_ENV }}
+EOF
 
-            # 환경 감지
-            CURRENT_ENV="none"
-            if curl -f -s http://localhost/health/blue > /dev/null 2>&1; then
-                CURRENT_ENV="blue"
-                NEW_ENV="green"
-            elif curl -f -s http://localhost/health/green > /dev/null 2>&1; then
-                CURRENT_ENV="green"
-                NEW_ENV="blue"
-            else
-                # 첫 배포 또는 모든 환경이 다운된 상태
-                CURRENT_ENV="none"
-                NEW_ENV="blue"  # 첫 배포는 블루부터
-                echo "🎯 첫 배포 또는 전체 다운 상태 감지"
-            fi
+# 업스트림 설정 파일들 생성 (처음 배포시)
+if [ ! -f nginx-upstream.conf ]; then
+    cat << 'EOF' > nginx-upstream.conf
+upstream app_backend {
+    server app-blue:8080 max_fails=3 fail_timeout=30s;
+}
+EOF
+fi
 
-            echo "🔵🟢 현재 환경: $CURRENT_ENV, 새 환경: $NEW_ENV"
+if [ ! -f nginx-upstream-blue.conf ]; then
+    cat << 'EOF' > nginx-upstream-blue.conf
+upstream app_backend {
+    server app-blue:8080 max_fails=3 fail_timeout=30s;
+}
+EOF
+fi
 
-            # 블루-그린 배포 함수
-            deploy_blue_green() {
-              echo "🚀 $NEW_ENV 환경에 새 버전 배포 시작..."
-              
-              # 환경 변수 파일 생성
-              cat << 'EOF' > .env
-            ${{ secrets.APPLICATION_ENV }}
-            EOF
+if [ ! -f nginx-upstream-green.conf ]; then
+    cat << 'EOF' > nginx-upstream-green.conf
+upstream app_backend {
+    server app-green:8080 max_fails=3 fail_timeout=30s;
+}
+EOF
+fi
 
-              # 새 환경에만 새 이미지 배포
-              if [ "$NEW_ENV" = "blue" ]; then
-                echo "🔵 블루 환경 배포 중..."
-                sudo docker-compose -f docker-compose.app.yml up -d app-blue nginx
-              else
-                echo "🟢 그린 환경 배포 중..."
-                sudo docker-compose -f docker-compose.app.yml --profile green up -d app-green nginx
-              fi
-              
-              # 새 환경 헬스체크 (5분)
-              echo "🏥 $NEW_ENV 환경 헬스체크 시작..."
-              
-              # 디버깅: 컨테이너 상태 확인
-              echo "📋 컨테이너 상태 확인:"
-              sudo docker ps | grep -E "(nginx|app-blue|app-green)"
-              
-              # 디버깅: Nginx 설정 확인
-              echo "📋 Nginx 업스트림 설정:"
-              sudo docker exec nginx cat /etc/nginx/conf.d/upstream.conf || echo "업스트림 설정 파일 없음"
-              
-              sleep 30
-              
-              for i in {1..30}; do
-                # 디버깅: 헬스체크 응답 확인
-                echo "🔍 헬스체크 시도 $i/30: http://localhost/health/$NEW_ENV"
-                HEALTH_RESPONSE=$(curl -f -s "http://localhost/health/$NEW_ENV" 2>&1)
-                HEALTH_STATUS=$?
-                
-                if [ $HEALTH_STATUS -eq 0 ]; then
-                  echo "✅ $NEW_ENV 환경 헬스체크 성공! (시도 $i/30)"
-                  echo "📄 응답: $HEALTH_RESPONSE"
-                  
-                  # 트래픽 전환 (Nginx 업스트림 변경)
-                  switch_traffic_to_new_env
-                  
-                  # 트래픽 전환 후 검증 (10초 대기 후 확인)
-                  sleep 10
-                  if curl -f -s http://localhost/actuator/health > /dev/null 2>&1; then
-                    echo "✅ 트래픽 전환 성공!"
-                    
-                    # 이전 환경 정리
-                    cleanup_old_env
-                    return 0
-                                  else
-                  echo "❌ 트래픽 전환 실패"
-                  return 1
-                fi
-              else
-                echo "❌ 헬스체크 실패 (상태코드: $HEALTH_STATUS)"
-                echo "📄 에러 응답: $HEALTH_RESPONSE"
-                
-                # 추가 디버깅: 컨테이너 로그 확인
-                if [ $i -eq 5 ] || [ $i -eq 15 ]; then
-                  echo "📋 $NEW_ENV 컨테이너 로그 (최근 10줄):"
-                  sudo docker logs --tail 10 "app-$NEW_ENV" || echo "컨테이너 로그 확인 실패"
-                fi
-              fi
-              echo "⏳ $NEW_ENV 헬스체크 재시도 중... ($i/30)"
-              sleep 10
-            done
-              
-              echo "❌ $NEW_ENV 환경 헬스체크 실패"
-              return 1
-            }
+# Nginx가 없으면 시작
+if ! sudo docker ps --format "{{.Names}}" | grep -q "^nginx$"; then
+    echo "🔧 Nginx 시작 중..."
+    sudo docker-compose -f docker-compose.app.yml up -d nginx
+    sleep 5
+fi
 
-            # 트래픽 전환 함수
-            switch_traffic_to_new_env() {
-              echo "🔄 트래픽을 $NEW_ENV 환경으로 전환 중..."
-              
-              # 업스트림 설정 파일 교체
-              if [ "$NEW_ENV" = "blue" ]; then
-                cp nginx-upstream-blue.conf nginx-upstream.conf
-              else
-                cp nginx-upstream-green.conf nginx-upstream.conf
-              fi
-              
-              # Docker 컨테이너 내부로 파일 복사
-              sudo docker cp nginx-upstream.conf nginx:/etc/nginx/conf.d/upstream.conf
-              
-              # Nginx 설정 리로드 (무중단)
-              sudo docker exec nginx nginx -s reload
-              
-              echo "✅ 트래픽 전환 완료: $NEW_ENV 환경으로"
-            }
+# 새 환경 배포
+if [ "$NEW_ENV" = "blue" ]; then
+    echo "🔵 블루 환경 배포 중..."
+    sudo docker-compose -f docker-compose.app.yml up -d app-blue
+else
+    echo "🟢 그린 환경 배포 중..."
+    sudo docker-compose -f docker-compose.app.yml --profile green up -d app-green
+fi
 
-            # 이전 환경 정리 함수
-            cleanup_old_env() {
-              echo "🧹 $CURRENT_ENV 환경 정리 중..."
-              
-              if [ "$CURRENT_ENV" = "blue" ]; then
+# 헬스체크
+echo "🏥 $NEW_ENV 환경 헬스체크 시작..."
+sleep 30
+
+HEALTH_SUCCESS=false
+for i in {1..30}; do
+    if curl -f -s "http://localhost/health/$NEW_ENV" > /dev/null 2>&1; then
+        echo "✅ $NEW_ENV 환경 헬스체크 성공! (시도 $i/30)"
+        HEALTH_SUCCESS=true
+        break
+    fi
+    echo "⏳ $NEW_ENV 헬스체크 재시도 중... ($i/30)"
+    sleep 10
+done
+
+if [ "$HEALTH_SUCCESS" = "true" ]; then
+    # 트래픽 전환 (업스트림 변경)
+    echo "🔄 트래픽을 $NEW_ENV 환경으로 전환 중..."
+    
+    if [ "$NEW_ENV" = "blue" ]; then
+        cp nginx-upstream-blue.conf nginx-upstream.conf
+    else
+        cp nginx-upstream-green.conf nginx-upstream.conf
+    fi
+    
+    # Nginx 설정 리로드
+    sudo docker cp nginx-upstream.conf nginx:/etc/nginx/conf.d/upstream.conf
+    sudo docker exec nginx nginx -s reload
+    
+    echo "✅ 트래픽 전환 완료: $NEW_ENV 환경으로"
+    
+    # 트래픽 전환 검증
+    sleep 10
+    if curl -f -s http://localhost/actuator/health > /dev/null 2>&1; then
+        echo "✅ 트래픽 전환 검증 성공!"
+        
+        # 이전 환경 정리
+        if [ "$CURRENT_ENV" != "none" ]; then
+            echo "🧹 $CURRENT_ENV 환경 정리 중..."
+            if [ "$CURRENT_ENV" = "blue" ]; then
                 sudo docker-compose -f docker-compose.app.yml stop app-blue
                 sudo docker-compose -f docker-compose.app.yml rm -f app-blue
-              else
-                sudo docker-compose -f docker-compose.app.yml stop app-green
-                sudo docker-compose -f docker-compose.app.yml rm -f app-green
-              fi
-              
-              echo "✅ $CURRENT_ENV 환경 정리 완료"
-            }
-
-            # 롤백 함수 정의
-            rollback_blue_green() {
-              echo "🔄 $CURRENT_ENV 환경으로 롤백 중..."
-              
-              # 트래픽을 다시 이전 환경으로 전환
-              if [ "$CURRENT_ENV" = "blue" ]; then
-                cp nginx-upstream-blue.conf nginx-upstream.conf
-              else
-                cp nginx-upstream-green.conf nginx-upstream.conf
-              fi
-              
-              sudo docker cp nginx-upstream.conf nginx:/etc/nginx/conf.d/upstream.conf
-              sudo docker exec nginx nginx -s reload
-              
-              echo "✅ 트래픽 롤백 완료: $CURRENT_ENV 환경으로"
-              
-              # 실패한 새 환경 정리
-              if [ "$NEW_ENV" = "blue" ]; then
-                sudo docker-compose -f docker-compose.app.yml stop app-blue
-                sudo docker-compose -f docker-compose.app.yml rm -f app-blue
-              else
-                sudo docker-compose -f docker-compose.app.yml stop app-green
-                sudo docker-compose -f docker-compose.app.yml rm -f app-green
-              fi
-              
-              echo "✅ 실패한 $NEW_ENV 환경 정리 완료"
-            }
-
-            # 블루-그린 배포 실행
-            if deploy_blue_green; then
-              echo "🎉 블루-그린 배포 성공!"
-              
-              # 사용되지 않는 이미지 정리
-              echo "🧹 사용되지 않는 이미지 정리 중..."
-              sudo docker image prune -f
-              
             else
-              echo "⚠️ 블루-그린 배포 실패, 롤백 시도 중..."
-              if rollback_blue_green; then
-                echo "🔄 롤백 완료 - $CURRENT_ENV 환경으로 복구됨"
-                
-                # 실패한 새 이미지 정리
-                NEW_IMAGE="$ECR_REGISTRY/$ECR_REPOSITORY:latest"
-                echo "🧹 실패한 새 이미지 정리 중: $NEW_IMAGE"
-                sudo docker rmi "$NEW_IMAGE" || echo "⚠️ 새 이미지 정리 실패"
-                
-                exit 1  # GitHub Actions에서 실패로 표시
-              else
-                echo "💥 롤백도 실패 - 수동 복구 필요"
-                exit 1
-              fi
+                sudo docker-compose -f docker-compose.app.yml stop app-green
+                sudo docker-compose -f docker-compose.app.yml rm -f app-green
             fi
+            echo "✅ $CURRENT_ENV 환경 정리 완료"
+        fi
+        
+        echo "🎉 블루-그린 배포 성공!"
+    else
+        echo "❌ 트래픽 전환 검증 실패 - 롤백 시도"
+        
+        # 롤백: 이전 환경으로 트래픽 되돌리기
+        if [ "$CURRENT_ENV" != "none" ]; then
+            if [ "$CURRENT_ENV" = "blue" ]; then
+                cp nginx-upstream-blue.conf nginx-upstream.conf
+            else
+                cp nginx-upstream-green.conf nginx-upstream.conf
+            fi
+            sudo docker cp nginx-upstream.conf nginx:/etc/nginx/conf.d/upstream.conf
+            sudo docker exec nginx nginx -s reload
+            echo "✅ 트래픽 롤백 완료"
+        fi
+        
+        # 실패한 새 환경 정리
+        if [ "$NEW_ENV" = "blue" ]; then
+            sudo docker-compose -f docker-compose.app.yml stop app-blue
+            sudo docker-compose -f docker-compose.app.yml rm -f app-blue
+        else
+            sudo docker-compose -f docker-compose.app.yml stop app-green
+            sudo docker-compose -f docker-compose.app.yml rm -f app-green
+        fi
+        
+        echo "💥 배포 실패 - 롤백 완료"
+        exit 1
+    fi
+else
+    echo "❌ $NEW_ENV 환경 헬스체크 실패 - 배포 실패"
+    
+    # 실패한 새 환경 정리
+    if [ "$NEW_ENV" = "blue" ]; then
+        sudo docker-compose -f docker-compose.app.yml stop app-blue || true
+        sudo docker-compose -f docker-compose.app.yml rm -f app-blue || true
+    else
+        sudo docker-compose -f docker-compose.app.yml stop app-green || true
+        sudo docker-compose -f docker-compose.app.yml rm -f app-green || true
+    fi
+    
+    exit 1
+fi
 
-            # 5️⃣ 정리 작업
-
-            echo "🧹 dangling 이미지 정리 중..."
-            sudo docker image prune -f
-
-            echo "✅ 배포 완료!"
+# 5️⃣ 정리 작업
+echo "🧹 dangling 이미지 정리 중..."
+sudo docker image prune -f
+echo "✅ 블루-그린 배포 완료!"

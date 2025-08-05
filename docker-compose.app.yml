@@ -4,7 +4,7 @@ services:
   nginx:
     image: nginx:stable-alpine
     container_name: nginx
-    restart: always
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
@@ -52,10 +52,10 @@ services:
         reservations:
           cpus: "0.5"
           memory: 512M
-    networks:
-      - app-network
     profiles:
       - green # 기본적으로는 시작하지 않음
+    networks:
+      - app-network
 
 networks:
   app-network:

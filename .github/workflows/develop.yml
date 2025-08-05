@@ -177,16 +177,32 @@ jobs:
             # 4️⃣ 블루-그린 배포 (무중단 배포)
             cd ~/deploy
 
-            # 현재 활성 환경 확인
+            # 현재 활성 환경 확인 (컨테이너 기반으로 판단)
             CURRENT_ENV="none"
-            if curl -f -s http://localhost/health/blue > /dev/null 2>&1; then
-                CURRENT_ENV="blue"
-                NEW_ENV="green"
-            elif curl -f -s http://localhost/health/green > /dev/null 2>&1; then
+            if sudo docker ps --format "{{.Names}}" | grep -q "^app-blue$"; then
+                if sudo docker ps --format "{{.Names}}" | grep -q "^app-green$"; then
+                    # 둘 다 실행 중이면 nginx upstream 설정으로 판단
+                    if grep -q "app-blue:8080" nginx-upstream.conf 2>/dev/null; then
+                        CURRENT_ENV="blue"
+                        NEW_ENV="green"
+                    elif grep -q "app-green:8080" nginx-upstream.conf 2>/dev/null; then
+                        CURRENT_ENV="green" 
+                        NEW_ENV="blue"
+                    else
+                        CURRENT_ENV="blue"  # 기본값
+                        NEW_ENV="green"
+                    fi
+                else
+                    # blue만 실행 중
+                    CURRENT_ENV="blue"
+                    NEW_ENV="green"
+                fi
+            elif sudo docker ps --format "{{.Names}}" | grep -q "^app-green$"; then
+                # green만 실행 중
                 CURRENT_ENV="green"
                 NEW_ENV="blue"
             else
-                # 첫 배포 - 블루부터 시작
+                # 둘 다 없으면 첫 배포 - 블루부터 시작
                 CURRENT_ENV="none"
                 NEW_ENV="blue"
             fi
@@ -223,22 +239,43 @@ jobs:
             EOF
             fi
 
-            # Nginx가 없으면 시작
+            # Nginx 설정 동기화 및 시작
+            echo "🔧 Nginx 설정 동기화 중..."
+
+            # 현재 환경에 맞는 upstream 설정 적용
+            if [ "$CURRENT_ENV" = "blue" ]; then
+                echo "🔵 Blue 환경용 upstream 설정 적용"
+                cp nginx-upstream-blue.conf nginx-upstream.conf
+            elif [ "$CURRENT_ENV" = "green" ]; then
+                echo "🟢 Green 환경용 upstream 설정 적용"
+                cp nginx-upstream-green.conf nginx-upstream.conf
+            else
+                echo "🔵 기본 Blue 환경용 upstream 설정 적용 (첫 실행)"
+                cp nginx-upstream-blue.conf nginx-upstream.conf
+            fi
+
+            # 현재 upstream 설정 확인
+            echo "📋 현재 upstream 설정:"
+            cat nginx-upstream.conf
+
+            # Nginx가 없으면 시작, 있으면 재시작
             if ! sudo docker ps --format "{{.Names}}" | grep -q "^nginx$"; then
                 echo "🔧 Nginx 시작 중..."
                 sudo docker-compose -f docker-compose.app.yml up -d nginx
-                sleep 5
-                
-                # Nginx 시작 확인
-                echo "📋 Nginx 시작 후 상태:"
-                sudo docker ps --filter "name=nginx" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-                
-                # Nginx 로그 확인
-                echo "📝 Nginx 로그:"
-                sudo docker logs nginx --tail 20 || echo "Nginx 로그 가져오기 실패"
             else
-                echo "✅ Nginx가 이미 실행 중입니다"
+                echo "🔄 Nginx 재시작 중 (설정 동기화)..."
+                sudo docker-compose -f docker-compose.app.yml restart nginx
             fi
+
+            sleep 5
+
+            # Nginx 시작 확인
+            echo "📋 Nginx 시작 후 상태:"
+            sudo docker ps --filter "name=nginx" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+            # Nginx 로그 확인
+            echo "📝 Nginx 로그:"
+            sudo docker logs nginx --tail 20 || echo "Nginx 로그 가져오기 실패"
 
             # 새 환경 배포
             if [ "$NEW_ENV" = "blue" ]; then
@@ -275,13 +312,13 @@ jobs:
             fi
 
             echo "=== Nginx 경유 헬스체크 시도 ==="
-            NGINX_RESULT=$(curl -s "http://localhost/health/$NEW_ENV" 2>&1 || echo "FAILED")
+            NGINX_RESULT=$(curl -s "http://localhost/health" 2>&1 || echo "FAILED")
             echo "Nginx 경유 헬스체크: $NGINX_RESULT"
 
             echo "=== 헬스체크 루프 시작 ==="
             HEALTH_SUCCESS=false
             for i in {1..30}; do
-                if curl -f -s "http://localhost/health/$NEW_ENV" > /dev/null 2>&1; then
+                if curl -f -s "http://localhost/health" > /dev/null 2>&1; then
                     echo "✅ $NEW_ENV 환경 헬스체크 성공! (시도 $i/30)"
                     HEALTH_SUCCESS=true
                     break
@@ -291,7 +328,7 @@ jobs:
                 # 5번째 시도마다 상세 정보 출력
                 if [ $((i % 5)) -eq 0 ]; then
                     echo "--- 상세 디버깅 정보 (시도 $i) ---"
-                    DETAILED_RESULT=$(curl -v "http://localhost/health/$NEW_ENV" 2>&1 || echo "FAILED")
+                    DETAILED_RESULT=$(curl -v "http://localhost/health" 2>&1 || echo "FAILED")
                     echo "상세 응답: $DETAILED_RESULT"
                 fi
                 

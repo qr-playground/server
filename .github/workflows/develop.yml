@@ -228,6 +228,16 @@ jobs:
                 echo "🔧 Nginx 시작 중..."
                 sudo docker-compose -f docker-compose.app.yml up -d nginx
                 sleep 5
+                
+                # Nginx 시작 확인
+                echo "📋 Nginx 시작 후 상태:"
+                sudo docker ps --filter "name=nginx" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+                
+                # Nginx 로그 확인
+                echo "📝 Nginx 로그:"
+                sudo docker logs nginx --tail 20 || echo "Nginx 로그 가져오기 실패"
+            else
+                echo "✅ Nginx가 이미 실행 중입니다"
             fi
 
             # 새 환경 배포
@@ -245,8 +255,15 @@ jobs:
 
             # 헬스체크 전 상태 확인
             echo "🔍 헬스체크 전 상태 확인..."
-            echo "=== 컨테이너 상태 ==="
-            sudo docker ps --filter "name=nginx\|app-$NEW_ENV" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            echo "=== 모든 컨테이너 상태 ==="
+            sudo docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}"
+
+            echo "=== 타겟 컨테이너 상세 상태 ==="
+            sudo docker ps --filter "name=nginx" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            sudo docker ps --filter "name=app-$NEW_ENV" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+            echo "=== $NEW_ENV 컨테이너 로그 (최근 50줄) ==="
+            sudo docker logs --tail 50 app-$NEW_ENV || echo "로그 가져오기 실패"
 
             echo "=== 직접 앱 헬스체크 시도 ==="
             if [ "$NEW_ENV" = "blue" ]; then

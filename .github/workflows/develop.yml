@@ -243,6 +243,25 @@ jobs:
             echo "🏥 $NEW_ENV 환경 헬스체크 시작..."
             sleep 30
 
+            # 헬스체크 전 상태 확인
+            echo "🔍 헬스체크 전 상태 확인..."
+            echo "=== 컨테이너 상태 ==="
+            sudo docker ps --filter "name=nginx\|app-$NEW_ENV" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+            echo "=== 직접 앱 헬스체크 시도 ==="
+            if [ "$NEW_ENV" = "blue" ]; then
+                DIRECT_RESULT=$(curl -s http://localhost:8080/actuator/health 2>&1 || echo "FAILED")
+                echo "직접 블루 헬스체크 (8080): $DIRECT_RESULT"
+            else
+                DIRECT_RESULT=$(curl -s http://localhost:8081/actuator/health 2>&1 || echo "FAILED")
+                echo "직접 그린 헬스체크 (8081): $DIRECT_RESULT"
+            fi
+
+            echo "=== Nginx 경유 헬스체크 시도 ==="
+            NGINX_RESULT=$(curl -s "http://localhost/health/$NEW_ENV" 2>&1 || echo "FAILED")
+            echo "Nginx 경유 헬스체크: $NGINX_RESULT"
+
+            echo "=== 헬스체크 루프 시작 ==="
             HEALTH_SUCCESS=false
             for i in {1..30}; do
                 if curl -f -s "http://localhost/health/$NEW_ENV" > /dev/null 2>&1; then
@@ -251,6 +270,14 @@ jobs:
                     break
                 fi
                 echo "⏳ $NEW_ENV 헬스체크 재시도 중... ($i/30)"
+                
+                # 5번째 시도마다 상세 정보 출력
+                if [ $((i % 5)) -eq 0 ]; then
+                    echo "--- 상세 디버깅 정보 (시도 $i) ---"
+                    DETAILED_RESULT=$(curl -v "http://localhost/health/$NEW_ENV" 2>&1 || echo "FAILED")
+                    echo "상세 응답: $DETAILED_RESULT"
+                fi
+                
                 sleep 10
             done
 

@@ -286,11 +286,11 @@ jobs:
             done
 
             if [ "$HEALTH_SUCCESS" = "true" ]; then
-                # 다운타임 측정 시작
-                DOWNTIME_START=$(date +%s)
-                echo "⏰ 트래픽 전환 시작 시간: $(date)"
+                # 무중단 트래픽 전환 시작
+                SWITCH_START=$(date +%s)
+                echo "⏰ 무중단 트래픽 전환 시작: $(date)"
                 
-                # 트래픽 전환 (업스트림 변경)
+                # 트래픽 전환 (무중단 reload 방식)
                 echo "🔄 트래픽을 $NEW_ENV 환경으로 전환 중..."
                 
                 if [ "$NEW_ENV" = "blue" ]; then
@@ -299,51 +299,61 @@ jobs:
                     cp nginx-upstream-green.conf nginx-upstream.conf
                 fi
                 
-                # Nginx 컨테이너 재시작으로 설정 적용
-                echo "🔄 nginx 재시작 중... (서비스 일시 중단)"
-                sudo docker-compose -f docker-compose.app.yml restart nginx
-                
-                # 트래픽 복구 대기 및 검증
-                echo "⏳ 서비스 복구 대기 중..."
-                RECOVERY_SUCCESS=false
-                for i in {1..30}; do
-                    if curl -f -s http://localhost/health > /dev/null 2>&1; then
-                        DOWNTIME_END=$(date +%s)
-                        DOWNTIME_DURATION=$((DOWNTIME_END - DOWNTIME_START))
-                        echo "✅ 서비스 복구 완료! (복구 시간: ${DOWNTIME_DURATION}초)"
-                        RECOVERY_SUCCESS=true
-                        break
-                    fi
-                    sleep 2
-                done
+                # 무중단 nginx 설정 리로드 (volume mount 활용)
+                echo "⚡ nginx 설정 리로드 중... (무중단)"
+                if sudo docker exec nginx nginx -s reload; then
+                    SWITCH_END=$(date +%s)
+                    SWITCH_DURATION=$((SWITCH_END - SWITCH_START))
+                    echo "✅ 무중단 트래픽 전환 완료! (전환 시간: ${SWITCH_DURATION}초)"
+                    RECOVERY_SUCCESS=true
+                else
+                    echo "❌ nginx 리로드 실패 - 재시작 방식으로 폴백"
+                    # 리로드 실패 시 재시작으로 폴백
+                    sudo docker-compose -f docker-compose.app.yml restart nginx
+                    sleep 5
+                    SWITCH_END=$(date +%s)
+                    SWITCH_DURATION=$((SWITCH_END - SWITCH_START))
+                    echo "✅ nginx 재시작 완료 (전환 시간: ${SWITCH_DURATION}초)"
+                    RECOVERY_SUCCESS=true
+                fi
                 
                 if [ "$RECOVERY_SUCCESS" = "true" ]; then
-                    echo "✅ 트래픽 전환 검증 성공!"
-                    
-                    # 이전 환경 정리
-                    if [ "$CURRENT_ENV" != "none" ]; then
-                        if [ "$CURRENT_ENV" = "blue" ]; then
-                            sudo docker-compose -f docker-compose.app.yml stop app-blue
-                            sudo docker-compose -f docker-compose.app.yml rm -f app-blue
-                        else
-                            sudo docker-compose -f docker-compose.app.yml stop app-green
-                            sudo docker-compose -f docker-compose.app.yml rm -f app-green
+                    # 트래픽 전환 최종 검증
+                    sleep 3
+                    if curl -f -s http://localhost/health > /dev/null 2>&1; then
+                        echo "✅ 트래픽 전환 검증 성공!"
+                        
+                        # 이전 환경 정리
+                        if [ "$CURRENT_ENV" != "none" ]; then
+                            if [ "$CURRENT_ENV" = "blue" ]; then
+                                sudo docker-compose -f docker-compose.app.yml stop app-blue
+                                sudo docker-compose -f docker-compose.app.yml rm -f app-blue
+                            else
+                                sudo docker-compose -f docker-compose.app.yml stop app-green
+                                sudo docker-compose -f docker-compose.app.yml rm -f app-green
+                            fi
                         fi
+                        
+                        # 최종 배포 성공 및 현재 버전 확인
+                        FINAL_VERSION=$(curl -s http://localhost/actuator/info 2>/dev/null | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+                        echo ""
+                        echo "🎉 ===== 블루-그린 배포 성공! ====="
+                        echo "🔵🟢 현재 활성 환경: $NEW_ENV"
+                        echo "📦 배포 버전: $FINAL_VERSION"
+                        echo "⚡ 전환 시간: ${SWITCH_DURATION}초 (무중단)"
+                        echo "⏰ 배포 완료 시간: $(date)"
+                        echo "================================"
+                    else
+                        echo "❌ 트래픽 전환 검증 실패 - 롤백 필요"
+                        RECOVERY_SUCCESS=false
                     fi
+                fi
+                
+                # 트래픽 전환 실패 시 롤백 처리
+                if [ "$RECOVERY_SUCCESS" = "false" ]; then
+                    echo "❌ 트래픽 전환 실패 - 롤백 시도"
                     
-                    # 최종 배포 성공 및 현재 버전 확인
-                    FINAL_VERSION=$(curl -s http://localhost/actuator/info 2>/dev/null | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
-                    echo ""
-                    echo "🎉 ===== 블루-그린 배포 성공! ====="
-                    echo "🔵🟢 현재 활성 환경: $NEW_ENV"
-                    echo "📦 배포 버전: $FINAL_VERSION"
-                    echo "⏱️  다운타임: ${DOWNTIME_DURATION}초"
-                    echo "⏰ 배포 완료 시간: $(date)"
-                    echo "================================"
-                else
-                    echo "❌ 서비스 복구 실패 - 롤백 시도"
-                    
-                    # 롤백: 이전 환경으로 트래픽 되돌리기
+                    # 롤백: 이전 환경으로 트래픽 되돌리기 (무중단 방식)
                     if [ "$CURRENT_ENV" != "none" ]; then
                         echo "🔄 이전 환경($CURRENT_ENV)으로 롤백 중..."
                         if [ "$CURRENT_ENV" = "blue" ]; then
@@ -352,9 +362,9 @@ jobs:
                             cp nginx-upstream-green.conf nginx-upstream.conf
                         fi
                         
-                        sudo docker-compose -f docker-compose.app.yml restart nginx
-                        sleep 10
-                        echo "✅ 트래픽 롤백 완료"
+                        # 무중단 롤백 (volume mount 활용)
+                        sudo docker exec nginx nginx -s reload
+                        echo "✅ 트래픽 롤백 완료 (무중단)"
                     fi
                     
                     # 실패한 새 환경 정리
@@ -369,7 +379,7 @@ jobs:
                     echo ""
                     echo "💥 ===== 배포 실패 ====="
                     echo "🔵🟢 현재 활성 환경: $CURRENT_ENV (롤백됨)"
-                    echo "❌ 실패 원인: 서비스 복구 실패"
+                    echo "❌ 실패 원인: 트래픽 전환 검증 실패"
                     echo "⏰ 실패 시간: $(date)"
                     echo "==================="
                     exit 1

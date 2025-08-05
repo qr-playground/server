@@ -239,7 +239,7 @@ jobs:
             EOF
             fi
 
-                        # Nginx 설정 동기화
+            # Nginx 설정 동기화
             if [ "$CURRENT_ENV" = "blue" ]; then
                 cp nginx-upstream-blue.conf nginx-upstream.conf
             elif [ "$CURRENT_ENV" = "green" ]; then
@@ -286,8 +286,8 @@ jobs:
             done
 
             if [ "$HEALTH_SUCCESS" = "true" ]; then
-                # 무중단 트래픽 전환 시작
-                SWITCH_START=$(date +%s)
+                # 무중단 트래픽 전환 시작 (밀리초 정밀도)
+                SWITCH_START=$(date +%s%3N)
                 echo "⏰ 무중단 트래픽 전환 시작: $(date)"
                 
                 # 트래픽 전환 (무중단 reload 방식)
@@ -302,18 +302,20 @@ jobs:
                 # 무중단 nginx 설정 리로드 (volume mount 활용)
                 echo "⚡ nginx 설정 리로드 중... (무중단)"
                 if sudo docker exec nginx nginx -s reload; then
-                    SWITCH_END=$(date +%s)
-                    SWITCH_DURATION=$((SWITCH_END - SWITCH_START))
-                    echo "✅ 무중단 트래픽 전환 완료! (전환 시간: ${SWITCH_DURATION}초)"
+                    SWITCH_END=$(date +%s%3N)
+                    SWITCH_DURATION_MS=$((SWITCH_END - SWITCH_START))
+                    SWITCH_DURATION_SEC=$(awk "BEGIN {printf \"%.3f\", $SWITCH_DURATION_MS / 1000}")
+                    echo "✅ 무중단 트래픽 전환 완료! (전환 시간: ${SWITCH_DURATION_MS}ms / ${SWITCH_DURATION_SEC}초)"
                     RECOVERY_SUCCESS=true
                 else
                     echo "❌ nginx 리로드 실패 - 재시작 방식으로 폴백"
                     # 리로드 실패 시 재시작으로 폴백
                     sudo docker-compose -f docker-compose.app.yml restart nginx
                     sleep 5
-                    SWITCH_END=$(date +%s)
-                    SWITCH_DURATION=$((SWITCH_END - SWITCH_START))
-                    echo "✅ nginx 재시작 완료 (전환 시간: ${SWITCH_DURATION}초)"
+                    SWITCH_END=$(date +%s%3N)
+                    SWITCH_DURATION_MS=$((SWITCH_END - SWITCH_START))
+                    SWITCH_DURATION_SEC=$(awk "BEGIN {printf \"%.3f\", $SWITCH_DURATION_MS / 1000}")
+                    echo "✅ nginx 재시작 완료 (전환 시간: ${SWITCH_DURATION_MS}ms / ${SWITCH_DURATION_SEC}초)"
                     RECOVERY_SUCCESS=true
                 fi
                 
@@ -335,12 +337,11 @@ jobs:
                         fi
                         
                         # 최종 배포 성공 및 현재 버전 확인
-                        FINAL_VERSION=$(curl -s http://localhost/actuator/info 2>/dev/null | grep -o '"version":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
                         echo ""
                         echo "🎉 ===== 블루-그린 배포 성공! ====="
                         echo "🔵🟢 현재 활성 환경: $NEW_ENV"
-                        echo "📦 배포 버전: $FINAL_VERSION"
-                        echo "⚡ 전환 시간: ${SWITCH_DURATION}초 (무중단)"
+                        echo "🚀 전환 시간: ${SWITCH_DURATION_MS}ms ➡️ ${SWITCH_DURATION_SEC}초)"
+                        echo "🧑‍💻 목표: 1초 이내 시 무중단배포 성공"
                         echo "⏰ 배포 완료 시간: $(date)"
                         echo "================================"
                     else

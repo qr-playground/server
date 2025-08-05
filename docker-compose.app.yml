@@ -12,8 +12,7 @@ services:
     networks:
       - app-network
     depends_on:
-      app-blue:
-        condition: service_healthy
+      - app-blue
 
   # 블루 환경 (기본 활성)
   app-blue:

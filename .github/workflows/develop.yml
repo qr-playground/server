@@ -341,13 +341,23 @@ jobs:
                 
                 if [ "$NEW_ENV" = "blue" ]; then
                     cp nginx-upstream-blue.conf nginx-upstream.conf
+                    echo "✅ Blue 환경용 upstream 설정 적용"
                 else
                     cp nginx-upstream-green.conf nginx-upstream.conf
+                    echo "✅ Green 환경용 upstream 설정 적용"
                 fi
                 
-                # Nginx 설정 리로드
-                sudo docker cp nginx-upstream.conf nginx:/etc/nginx/conf.d/upstream.conf
-                sudo docker exec nginx nginx -s reload
+                # 현재 적용된 upstream 설정 확인
+                echo "📋 새로 적용할 upstream 설정:"
+                cat nginx-upstream.conf
+                
+                # Nginx 컨테이너 재시작으로 설정 적용 (파일 교체 문제 해결)
+                echo "🔄 nginx 컨테이너 재시작 중..."
+                sudo docker-compose -f docker-compose.app.yml restart nginx
+                
+                # nginx 재시작 후 안정화 대기
+                echo "⏳ nginx 재시작 후 안정화 대기 (10초)..."
+                sleep 10
                 
                 echo "✅ 트래픽 전환 완료: $NEW_ENV 환경으로"
                 
@@ -375,13 +385,19 @@ jobs:
                     
                     # 롤백: 이전 환경으로 트래픽 되돌리기
                     if [ "$CURRENT_ENV" != "none" ]; then
+                        echo "🔄 이전 환경($CURRENT_ENV)으로 롤백 중..."
                         if [ "$CURRENT_ENV" = "blue" ]; then
                             cp nginx-upstream-blue.conf nginx-upstream.conf
                         else
                             cp nginx-upstream-green.conf nginx-upstream.conf
                         fi
-                        sudo docker cp nginx-upstream.conf nginx:/etc/nginx/conf.d/upstream.conf
-                        sudo docker exec nginx nginx -s reload
+                        
+                        echo "📋 롤백할 upstream 설정:"
+                        cat nginx-upstream.conf
+                        
+                        # nginx 재시작으로 롤백 설정 적용
+                        sudo docker-compose -f docker-compose.app.yml restart nginx
+                        sleep 10
                         echo "✅ 트래픽 롤백 완료"
                     fi
                     

@@ -140,7 +140,34 @@ jobs:
             else
               echo "배포용 코드 업데이트 중..."
               cd ~/deploy
+              
+              # 로컬 변경사항 백업 (nginx 설정 파일들)
+              if [ -f nginx-upstream.conf ]; then
+                cp nginx-upstream.conf nginx-upstream.conf.backup
+              fi
+              if [ -f nginx-upstream-blue.conf ]; then
+                cp nginx-upstream-blue.conf nginx-upstream-blue.conf.backup
+              fi
+              if [ -f nginx-upstream-green.conf ]; then
+                cp nginx-upstream-green.conf nginx-upstream-green.conf.backup
+              fi
+              
+              # 로컬 변경사항 스태시
+              git stash push -m "Auto-stash before deploy $(date)"
+              
+              # 원격 저장소에서 최신 코드 가져오기
               git pull origin develop
+              
+              # 백업된 설정 파일들 복원
+              if [ -f nginx-upstream.conf.backup ]; then
+                mv nginx-upstream.conf.backup nginx-upstream.conf
+              fi
+              if [ -f nginx-upstream-blue.conf.backup ]; then
+                mv nginx-upstream-blue.conf.backup nginx-upstream-blue.conf
+              fi
+              if [ -f nginx-upstream-green.conf.backup ]; then
+                mv nginx-upstream-green.conf.backup nginx-upstream-green.conf
+              fi
             fi
             # 3️⃣ Docker 이미지 업데이트
             echo "ECR 로그인 및 최신 이미지 다운로드 중..."

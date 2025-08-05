@@ -11,6 +11,9 @@ services:
       - ./nginx-upstream.conf:/etc/nginx/conf.d/upstream.conf:ro # 동적 업스트림 설정 추가
     networks:
       - app-network
+    depends_on:
+      app-blue:
+        condition: service_healthy
 
   # 블루 환경 (기본 활성)
   app-blue:

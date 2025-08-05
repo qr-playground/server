@@ -2,7 +2,8 @@ name: Deploy to AWS (Develop)
 
 on:
   push:
-    branches: [develop]
+    # branches: [develop]
+    branches: [feat/dep]
 
 # 동시 실행 제어 설정
 concurrency:
@@ -29,22 +30,22 @@ jobs:
       - name: Generate Spring config files
         run: |
           # resources 디렉토리 생성
-          mkdir -p src/main/resources
+              mkdir -p src/main/resources
 
           # 개발 환경 설정 파일 생성
-          cat << 'EOF' > src/main/resources/application-dev.yaml
-          ${{ secrets.APPLICATION_DEV_YAML }}
-          EOF
+                  cat << 'EOF' > src/main/resources/application-dev.yaml
+              ${{ secrets.APPLICATION_DEV_YAML }}
+              EOF
 
           # 테스트 환경 설정 파일 생성
-          cat << 'EOF' > src/main/resources/application-test.yaml
-          ${{ secrets.APPLICATION_TEST_YAML }}
-          EOF
+                  cat << 'EOF' > src/main/resources/application-test.yaml
+              ${{ secrets.APPLICATION_TEST_YAML }}
+              EOF
 
           # 환경 변수 파일 생성
-          cat << 'EOF' > src/main/.env
-          ${{ secrets.APPLICATION_ENV }}
-          EOF
+                  cat << 'EOF' > src/main/.env
+              ${{ secrets.APPLICATION_ENV }}
+              EOF
 
       # 3️⃣ Java 개발 환경 설정
       - name: Set up JDK 21
@@ -194,17 +195,24 @@ jobs:
               echo "🚀 $NEW_ENV 환경에 새 버전 배포 시작..."
               
               # 환경 변수 파일 생성
-              cat << 'EOF' > .env
+            cat << 'EOF' > .env
             ${{ secrets.APPLICATION_ENV }}
             EOF
 
-              # 새 환경에만 새 이미지 배포
+              # Nginx가 실행 중인지 확인하고 필요시 시작
+              if ! sudo docker ps --format "{{.Names}}" | grep -q "^nginx$"; then
+                echo "🔧 Nginx 시작 중..."
+                sudo docker-compose -f docker-compose.app.yml up -d nginx
+                sleep 5  # Nginx 안정화 대기
+              fi
+              
+              # 새 환경만 배포 (Nginx는 건드리지 않음)
               if [ "$NEW_ENV" = "blue" ]; then
                 echo "🔵 블루 환경 배포 중..."
-                sudo docker-compose -f docker-compose.app.yml up -d app-blue nginx
+                sudo docker-compose -f docker-compose.app.yml up -d app-blue
               else
                 echo "🟢 그린 환경 배포 중..."
-                sudo docker-compose -f docker-compose.app.yml --profile green up -d app-green nginx
+                sudo docker-compose -f docker-compose.app.yml --profile green up -d app-green
               fi
               
               # 새 환경 헬스체크 (5분)
@@ -241,7 +249,7 @@ jobs:
                     # 이전 환경 정리
                     cleanup_old_env
                     return 0
-                                  else
+                else
                   echo "❌ 트래픽 전환 실패"
                   return 1
                 fi
@@ -285,6 +293,11 @@ jobs:
 
             # 이전 환경 정리 함수
             cleanup_old_env() {
+              if [ "$CURRENT_ENV" = "none" ]; then
+                echo "🎯 첫 배포 완료 - 정리할 이전 환경 없음"
+                return 0
+              fi
+              
               echo "🧹 $CURRENT_ENV 환경 정리 중..."
               
               if [ "$CURRENT_ENV" = "blue" ]; then

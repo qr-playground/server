@@ -1,4 +1,4 @@
-## QR-World Server
+## QRworld Server
 
 ### 기술 스택
 
@@ -12,6 +12,19 @@
 
 - **배경**: 동아리 선착순 모집 시 노션 댓글로만 접수하여 불편하고 공정성 의심 발생
 - **목표**: QR로 입장·등록하는 선착순 시스템을 구축하고, 순서를 정확하게 반영
+
+
+### 서비스 링크
+
+- **Prod API**: `https://api.qrworld.shop`
+- **Swagger UI**: `https://api.qrworld.shop/swagger-ui/index.html`
+- **프런트엔드**: `https://qrworld.shop`
+
+### 테스트용 계정
+
+- 테스트 계정을 사용해서 QR 이벤트를 생성할 수 있습니다.
+- ID: `01012341234`
+- PW: `qrworld-test`
 
 ### 한눈에 보는 문제/해결/결과/링크
 
@@ -41,3 +54,8 @@
   - **관련 글**
     - [[QRworld] 서비스 통계를 보여줘. 통계 테이블과 스케줄러](https://velog.io/@suhwani/QRworld-%EC%BF%BC%EB%A6%AC-%EC%B5%9C%EC%A0%81%ED%99%94)
     - [[QRworld] 검색 기능, LIKE는 너무 느리잖아. PGroonga 활용 검색 최적화](https://velog.io/@suhwani/QRworld-%EA%B2%80%EC%83%89-%EA%B8%B0%EB%8A%A5-%EA%B5%AC%ED%98%84-with-LIKE-%EC%97%86%EC%9D%B4)
+
+### 문의 및 연락처
+
+- 개선 요청, 오류 제보 시 소정의 상품을 드립니다.
+- 오류 제보 / 문의 / 개선 요청: `suhwani.dev@gmail.com`

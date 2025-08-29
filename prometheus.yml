@@ -6,22 +6,22 @@ scrape_configs:
   - job_name: "postgres-exporter"
     metrics_path: "/metrics"
     static_configs:
-      - targets: ["postgres_exporter.monitoring.local:9187"]
+      - targets: ["postgres_exporter:9187"]
 
   - job_name: "app"
     scrape_interval: 5s
     metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ["app.monitoring.local:8080"]
+      - targets:  ["app:8080"]
 
-## 배포용
+# 배포용
 
-  # - job_name: "postgres-exporter"
+  # - job_name: "Deploy-postgres-exporter"
   #   metrics_path: "/metrics"
   #   static_configs:
   #     - targets: ["13.209.176.200:9187"]
 
-  # - job_name: "app"
+  # - job_name: "Deploy-app"
   #   scrape_interval: 5s
   #   metrics_path: "/actuator/prometheus"
   #   static_configs:

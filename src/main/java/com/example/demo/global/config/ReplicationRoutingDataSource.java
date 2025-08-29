@@ -23,15 +23,21 @@ public class ReplicationRoutingDataSource extends AbstractRoutingDataSource {
      */
     @Override
     protected Object determineCurrentLookupKey() {
+        boolean isPresentLsn = LsnContextHolder.getRequiredMinLsn().isPresent();
+        
         // 현재 트랜잭션이 읽기 전용인지 확인
         boolean isReadOnly = TransactionSynchronizationManager.isCurrentTransactionReadOnly();
-        boolean isTransactionActive = TransactionSynchronizationManager.isActualTransactionActive();
-        boolean isSynchronizationActive = TransactionSynchronizationManager.isSynchronizationActive();
+
+        if (isReadOnly && isPresentLsn) {
+            log.debug("라우팅 데이터소스 선택: {} (readOnly: {}, isPresentLsn: {})",
+                    "master", isReadOnly, isPresentLsn);
+            return "master";
+        }
 
         String dataSourceType = isReadOnly ? "slave" : "master";
 
-        log.debug("라우팅 데이터소스 선택: {} (readOnly: {}, transactionActive: {}, synchronizationActive: {})", 
-                dataSourceType, isReadOnly, isTransactionActive, isSynchronizationActive);
+        log.debug("라우팅 데이터소스 선택: {} (readOnly: {})", 
+                dataSourceType, isReadOnly);
 
         return dataSourceType;
     }

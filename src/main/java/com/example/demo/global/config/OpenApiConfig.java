@@ -58,7 +58,7 @@ public class OpenApiConfig {
 
         // 운영 서버 설정
         Server prodServer = new Server()
-                .url("http://localhost:8080") // ! TODO: 실제 운영 서버 URL로 수정
+                .url("https://api.qrworld.shop") // ! TODO: 실제 운영 서버 URL로 수정
                 .description("운영 서버");
 
         // JWT 보안 스키마 정의

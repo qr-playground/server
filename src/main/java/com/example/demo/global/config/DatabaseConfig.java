@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.LazyConnectionDataSourceProxy;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -70,5 +71,17 @@ public class DatabaseConfig {
     public DataSource dataSource(@Qualifier("routingDataSource") DataSource routingDataSource) {
         // LazyConnectionDataSourceProxy로 래핑하여 실제 커넥션이 필요한 시점까지 DataSource 선택을 지연
         return new LazyConnectionDataSourceProxy(routingDataSource);
+    }
+
+    @Bean
+    public JdbcTemplate masterJdbcTemplate(
+            @Qualifier("masterDataSource") DataSource masterDataSource) {
+        return new org.springframework.jdbc.core.JdbcTemplate(masterDataSource);
+    }
+
+    @Bean
+    public JdbcTemplate slaveJdbcTemplate(
+            @Qualifier("slaveDataSource") DataSource slaveDataSource) {
+        return new org.springframework.jdbc.core.JdbcTemplate(slaveDataSource);
     }
 }

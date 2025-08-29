@@ -26,8 +26,9 @@ public class SmsEventListener {
         try {
             log.info("✅✅✅ SMS 이벤트 처리 시작 - Thread: {}, 현재 성공: {}, 실패: {}",
                     Thread.currentThread().getName(), smsSuccessCount.get(), smsFailCount.get());
-
+            // !! FixMe: 모의 발송 코드 제거 후 실제 발송 코드 추가
             smsService.mockSendSms(event.getPhoneNumber(), event.getMessage());
+            // smsService.sendSms(event.getPhoneNumber(), event.getMessage());
 
             // SMS 발송 성공 시에만 성공 카운트 증가
             int currentSuccessCount = smsSuccessCount.incrementAndGet();

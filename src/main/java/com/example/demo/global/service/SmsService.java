@@ -14,6 +14,7 @@ import net.nurigo.sdk.NurigoApp;
 import net.nurigo.sdk.message.model.Message;
 import net.nurigo.sdk.message.request.SingleMessageSendingRequest;
 import net.nurigo.sdk.message.service.DefaultMessageService;
+import java.time.Instant;
 
 @Slf4j
 @Service
@@ -93,7 +94,7 @@ public class SmsService {
 
     public void mockSendSms(String to, String text) {
         try {
-            Thread.sleep(3000); // 3초 동안 현재 스레드를 중지
+            Thread.sleep(500); // 0.5초 동안 현재 스레드를 중지
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Mock SMS 지연 중 오류 발생", e);

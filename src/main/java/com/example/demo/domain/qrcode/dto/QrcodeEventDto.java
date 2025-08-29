@@ -103,6 +103,16 @@ public class QrcodeEventDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    @Schema(name = "QrcodeEventUpdateRequest", description = "QR 코드 이벤트 수정 요청 정보")
+    public static class Update {
+        private String title;
+        private String description;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Schema(name = "QrcodeEventResponse", description = "QR 코드 이벤트 조회 응답 정보")
     public static class Response {
 

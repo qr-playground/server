@@ -148,4 +148,17 @@ public class QrcodeEventService {
         Page<QrcodeEvent> qrcodeEvents = qrcodeEventRepository.searchQrcodeEventsPgroonga(keyword, pageable);
         return QrcodeEventDto.ListResponse.fromEntity(qrcodeEvents);
     }
+
+    @Transactional
+    public QrcodeEventDto.Response updateQrcodeEvent(String shortId, QrcodeEventDto.Update request, User user) {
+        QrcodeEvent qrcodeEvent = qrcodeEventRepository.findByShortId(shortId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QRCODE_EVENT_ENTITY_NOT_FOUND));
+
+        if (!qrcodeEvent.getUser().getId().equals(user.getId())) {
+            throw new CustomException(ErrorCode.QRCODE_EVENT_ENTITY_NOT_FOUND);
+        }
+
+        qrcodeEvent.update(request.getTitle(), request.getDescription());
+        return QrcodeEventDto.Response.fromEntity(qrcodeEvent);
+    }
 }

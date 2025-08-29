@@ -104,6 +104,15 @@ public class QrcodeEventController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{shortId}/update")
+    public ResponseEntity<QrcodeEventDto.Response> updateQrcodeEvent(@PathVariable String shortId,
+            @RequestBody QrcodeEventDto.Update request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        QrcodeEventDto.Response response = qrcodeEventService.updateQrcodeEvent(shortId, request,
+                userDetails.getUser());
+        return ResponseEntity.ok(response);
+    }
+
     /**
      * QR 코드 이벤트 검색 API (PGroonga Fuzzy 검색 + 페이지네이션)
      * 

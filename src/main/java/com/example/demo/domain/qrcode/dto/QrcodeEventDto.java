@@ -134,10 +134,13 @@ public class QrcodeEventDto {
             private QrcodeBenefitInfo qrcodeBenefitInfo;
 
             public static QrcodeInfo fromEntity(QrcodeEvent qrcodeEvent) {
+                QrcodeDesign design = qrcodeEvent.getQrcodeDesign();
+                QrcodeBenefit benefit = qrcodeEvent.getQrcodeBenefit();
+
                 return QrcodeInfo.builder()
                         .qrcodeEventInfo(QrcodeEventInfo.fromEntity(qrcodeEvent))
-                        .qrcodeDesignInfo(QrcodeDesignInfo.fromEntity(qrcodeEvent.getQrcodeDesign()))
-                        .qrcodeBenefitInfo(QrcodeBenefitInfo.fromEntity(qrcodeEvent.getQrcodeBenefit()))
+                        .qrcodeDesignInfo(design != null ? QrcodeDesignInfo.fromEntity(design) : null)
+                        .qrcodeBenefitInfo(benefit != null ? QrcodeBenefitInfo.fromEntity(benefit) : null)
                         .build();
             }
         }

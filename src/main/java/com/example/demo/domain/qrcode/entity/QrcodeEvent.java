@@ -124,4 +124,15 @@ public class QrcodeEvent {
     public void setQrcodeBenefit(QrcodeBenefit qrcodeBenefit) {
         this.qrcodeBenefit = qrcodeBenefit;
     }
+
+    /**
+     * 제목과 설명 업데이트
+     */
+    public void update(String title, String description) {
+        if (title != null && !title.isBlank()) {
+            this.title = title;
+        }
+        // 설명은 빈 문자열 허용 (삭제 의도 가능)
+        this.description = description;
+    }
 }

@@ -15,10 +15,10 @@ public enum ErrorCode {
     COMMON_ACCESS_DENIED(HttpStatus.FORBIDDEN, "E0004", "접근 권한이 없습니다"),
     COMMON_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E0005", "엔티티를 찾을 수 없습니다"),
     COMMON_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E0006", "서버 오류가 발생했습니다"),
-    COMMON_QUERY_FAILED(HttpStatus.BAD_REQUEST, "E0007", "쿼리 실행 실패"),
+    COMMON_QUERY_FAILED(HttpStatus.BAD_REQUEST, "E0007", "중복된 요청이거나 잘못된 요청입니다."),
     COMMON_DB_CONNECTION_FAILED(HttpStatus.BAD_REQUEST, "E0009", "DB 연결 실패"),
     COMMON_RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "E0010", "해당 경로 api가 없습니다."),
-            
+
     // AUTH 관련 에러 1000 ~ 1999 --------------------------------
     AUTH_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E1000", "인증 오류가 발생했습니다"),
     AUTH_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "E1001", "잘못된 입력값입니다"),
@@ -71,6 +71,7 @@ public enum ErrorCode {
     GUESTBOOK_ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "E5005", "엔티티를 찾을 수 없습니다"),
     GUESTBOOK_QRCODE_EVENT_NOT_FOUND(HttpStatus.NOT_FOUND, "E5006", "QR 코드 이벤트를 찾을 수 없습니다"),
     GUESTBOOK_QRCODE_EVENT_ENTRY_ENDED(HttpStatus.BAD_REQUEST, "E5007", "QR 코드 이벤트 참여가 종료되었습니다"),
+    GUESTBOOK_DUPLICATE_ENTRY(HttpStatus.CONFLICT, "E5008", "이미 등록된 방명록입니다"),
 
     // QRCODE_BENEFIT 관련 에러 6000 ~ 6999 --------------------------------
     QRCODE_BENEFIT_UNKNOWN_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E6000", "QR 코드 이벤트 이점 오류가 발생했습니다"),
@@ -89,7 +90,6 @@ public enum ErrorCode {
     INTERCEPTOR_RATE_LIMIT_DEFAULT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "E99001", "기본 요청 횟수를 초과했습니다"),
     INTERCEPTOR_RATE_LIMIT_SMS_SEND_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "E99002", "SMS 발송 요청 횟수를 초과했습니다"),
     INTERCEPTOR_RATE_LIMIT_GUESTBOOK_WRITE_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "E99003", "게스트북 작성 요청 횟수를 초과했습니다"),
-    
 
     // 예외 처리 범위 초과 --------------------------------
     OUT_OF_RANGE_ERROR(HttpStatus.BAD_REQUEST, "E100000", "예외 처리 오류 코드 범위 초과");

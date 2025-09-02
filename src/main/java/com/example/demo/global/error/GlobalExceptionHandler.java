@@ -1,5 +1,6 @@
 package com.example.demo.global.error;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.example.demo.global.error.exception.CustomException;
@@ -95,7 +97,6 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
                         DataIntegrityViolationException ex,
                         HttpServletRequest request) {
-                log.error("DB 무결성 제약 위반: {}", ex.getMessage());
 
                 ErrorCode code = ErrorCode.COMMON_QUERY_FAILED;
                 ErrorResponse response = ErrorResponse.of(code, request.getRequestURI());
@@ -127,6 +128,32 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(code.getStatus()).body(response);
         }
 
+        // SSE 스트림에서 클라이언트 단절(소켓 끊김) 시 발생하는 비동기 요청 사용 불가 예외는 하향 처리
+        @ExceptionHandler(AsyncRequestNotUsableException.class)
+        public ResponseEntity<?> handleAsyncRequestNotUsable(AsyncRequestNotUsableException ex,
+                        HttpServletRequest request) {
+                if (isSseRequest(request) && isClientDisconnect(ex)) {
+                        return ResponseEntity.noContent().build();
+                }
+
+                log.error("AsyncRequestNotUsableException: {}", ex.getMessage());
+                ErrorResponse response = ErrorResponse.of(ErrorCode.COMMON_INTERNAL_SERVER_ERROR,
+                                request.getRequestURI());
+                return ResponseEntity.status(ErrorCode.COMMON_INTERNAL_SERVER_ERROR.getStatus()).body(response);
+        }
+
+        // SSE 환경의 Broken pipe 등 I/O 예외는 하향 로그 처리
+        @ExceptionHandler(IOException.class)
+        public ResponseEntity<?> handleIoException(IOException ex, HttpServletRequest request) {
+                if (isSseRequest(request) && isClientDisconnect(ex)) {
+                        return ResponseEntity.noContent().build();
+                }
+
+                log.error("IO 예외 발생: {}", ex.getMessage());
+                ErrorResponse response = ErrorResponse.of(ErrorCode.COMMON_INTERNAL_SERVER_ERROR,
+                                request.getRequestURI());
+                return ResponseEntity.status(ErrorCode.COMMON_INTERNAL_SERVER_ERROR.getStatus()).body(response);
+        }
 
         // 처리되지 않은 모든 예외를 처리하는 기본 핸들러
         @ExceptionHandler(Exception.class)
@@ -141,5 +168,30 @@ public class GlobalExceptionHandler {
                 return ResponseEntity
                                 .status(ErrorCode.COMMON_INTERNAL_SERVER_ERROR.getStatus())
                                 .body(response);
+        }
+
+        private boolean isSseRequest(HttpServletRequest request) {
+                String accept = request.getHeader("Accept");
+                String contentType = request.getContentType();
+                String uri = request.getRequestURI();
+                return (accept != null && accept.contains("text/event-stream"))
+                                || (contentType != null && contentType.contains("text/event-stream"))
+                                || (uri != null && uri.contains("/stream"));
+        }
+
+        private boolean isClientDisconnect(Throwable throwable) {
+                Throwable t = throwable;
+                while (t != null) {
+                        String msg = t.getMessage();
+                        if (msg != null) {
+                                String lower = msg.toLowerCase();
+                                if (lower.contains("broken pipe") || lower.contains("connection reset by peer")
+                                                || lower.contains("clientabortexception")) {
+                                        return true;
+                                }
+                        }
+                        t = t.getCause();
+                }
+                return false;
         }
 }

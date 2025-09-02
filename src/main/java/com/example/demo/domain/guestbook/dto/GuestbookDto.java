@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 
 import com.example.demo.domain.guestbook.entity.Guestbook;
+import com.example.demo.domain.qrcode.entity.QrcodeBenefit;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -102,37 +103,27 @@ public class GuestbookDto {
         }
     }
 
-    // @Data
-    // @AllArgsConstructor
-    // @NoArgsConstructor
-    // @Builder
-    // public static class ListResponse {
-    // private List<Response> guestbooks;
-    // private PaginationInfo pagination;
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    @Schema(name = "GuestbookCreatedSsePayload", description = "SSE 전송용 방명록 생성 페이로드")
+    public static class GuestbookCreatedSsePayload {
+        private UUID id;
+        private String name;
+        private String createdAt; // ISO-8601 문자열
+        private String shortId;
+        private Integer availableAttendeeCount;
 
-    // @Data
-    // @AllArgsConstructor
-    // @NoArgsConstructor
-    // @Builder
-    // public static class PaginationInfo {
-    // private long totalItems;
-    // private int totalPages;
-    // private int currentPage;
-    // private int pageSize;
-    // private boolean hasNext;
-    // private boolean hasPrevious;
-    // }
-
-    // public static ListResponse fromEntities(List<Guestbook> guestbooks,
-    // PaginationInfo paginationInfo) {
-    // List<Response> responseList = guestbooks.stream()
-    // .map(Response::fromEntity)
-    // .collect(Collectors.toList());
-
-    // return ListResponse.builder()
-    // .guestbooks(responseList)
-    // .pagination(paginationInfo)
-    // .build();
-    // }
-    // }
+        public static GuestbookCreatedSsePayload fromEntity(Guestbook guestbook) {
+            QrcodeBenefit benefit = guestbook.getQrcodeEvent().getQrcodeBenefit();
+            return GuestbookCreatedSsePayload.builder()
+                    .id(guestbook.getId() != null ? guestbook.getId() : null)
+                    .name(guestbook.getName())
+                    .createdAt(guestbook.getCreatedAt() != null ? guestbook.getCreatedAt().toString() : null)
+                    .shortId(guestbook.getQrcodeEvent().getShortId())
+                    .availableAttendeeCount(benefit != null ? benefit.getAvailableAttendeeCount() : null)
+                    .build();
+        }
+    }
 }

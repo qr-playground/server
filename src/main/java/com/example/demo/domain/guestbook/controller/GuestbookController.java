@@ -95,14 +95,13 @@ public class GuestbookController {
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribeGuestbook(
             @PathVariable String shortId,
-            @RequestHeader(value="Last-Event-ID", required=false) String lastEventIdHead,
+            @RequestHeader(value = "Last-Event-ID", required = false) String lastEventIdHead,
             @RequestParam(name = "timeout", defaultValue = "600000") long timeoutMs,
             @RequestParam(value = "lastEventId", required = false) String lastEventIdParam,
-            @RequestParam(value = "size", defaultValue = "100") int size
-        ) {
-        long timeout = (timeoutMs >= 0) ? timeoutMs : 600_000L; // 600초 = 10분 
-        
-        String topic = "guestbook:" + shortId;
+            @RequestParam(value = "size", defaultValue = "100") int size) {
+        long timeout = (timeoutMs >= 0) ? timeoutMs : 600_000L; // 600초 = 10분
+
+        String topic = "guestbook:created:" + shortId;
 
         SseEmitter sseEmitter = sseService.subscribe(topic, timeout);
 
@@ -110,7 +109,7 @@ public class GuestbookController {
         // * 헤더에 Last-Event-ID는 브라우저단에서 event source 사용 시 자동으로 붙이는 것
         // * lastEventIdParam은 헤더가 유실되거나, 프록시 등등으로 없어질 수 있으니 안전하게 한 번 더 보내는 용도
         String lastEventId = (lastEventIdHead != null) ? lastEventIdHead : lastEventIdParam;
-        
+
         if (lastEventId != null && CursorUtil.matchShortId(lastEventId, shortId)) {
             guestbookService.replay(topic, sseEmitter, lastEventId, shortId, size);
         }

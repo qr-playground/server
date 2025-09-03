@@ -29,7 +29,7 @@ export let options = {
 
 export default function () {
   // !! 중요: shortId는 실제 존재하는 QR 이벤트의 ID여야 합니다.
-  const shortId = "MHUWLA89CE0C";
+  const shortId = "2VIPR0OK14S2";
   const authToken = __ENV.AUTH_TOKEN || "YOUR_FALLBACK_TOKEN_HERE";
 
   const url = `http://localhost:8080/api/qrcode/${shortId}/guestbook/`;
@@ -47,14 +47,14 @@ export default function () {
 
   // 절대 중복 없는 전화번호: 010 + 시나리오(1자리) + VU*10000+ITER (7자리)
   const uniqueNumber = __VU * 10000 + __ITER;
-  const phoneNumber = `777610${stageNumber}${String(uniqueNumber).padStart(
+  const phoneNumber = `szse7610${stageNumber}${String(uniqueNumber).padStart(
     7,
     "0"
   )}`;
 
   const payload = JSON.stringify({
     deviceId: `1-device-${stageNumber}-${__VU}-${__ITER}-${phoneNumber}`,
-    name: `1번 요청 ${stageNumber}-${__VU}-${__ITER}`,
+    name: `비디디 ${stageNumber}-${__VU}-${__ITER}`,
     phoneNumber: phoneNumber,
   });
 

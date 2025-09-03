@@ -78,6 +78,7 @@ public class QrcodeEventService {
      * @return QR 코드 이벤트 엔티티
      * @throws CustomException QRCODE_EVENT_ENTITY_NOT_FOUND
      */
+    @Transactional(readOnly = true)
     public QrcodeEvent findByShortIdInternal(String shortId) {
         // return qrcodeEventRepository.findByShortId(shortId);
 

@@ -111,19 +111,21 @@ public class GuestbookDto {
     public static class GuestbookCreatedSsePayload {
         private UUID id;
         private String name;
-        private String createdAt; // ISO-8601 문자열
+        private LocalDateTime createdAt;
         private String shortId;
         private Integer availableAttendeeCount;
 
         public static GuestbookCreatedSsePayload fromEntity(Guestbook guestbook) {
             QrcodeBenefit benefit = guestbook.getQrcodeEvent().getQrcodeBenefit();
             return GuestbookCreatedSsePayload.builder()
-                    .id(guestbook.getId() != null ? guestbook.getId() : null)
+                    .id(guestbook.getId())
                     .name(guestbook.getName())
-                    .createdAt(guestbook.getCreatedAt() != null ? guestbook.getCreatedAt().toString() : null)
+                    .createdAt(guestbook.getCreatedAt())
                     .shortId(guestbook.getQrcodeEvent().getShortId())
                     .availableAttendeeCount(benefit != null ? benefit.getAvailableAttendeeCount() : null)
                     .build();
         }
+
+        
     }
 }

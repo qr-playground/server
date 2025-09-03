@@ -29,7 +29,6 @@ import com.example.demo.global.service.SmsEventFactory;
 import com.example.demo.global.service.SmsService;
 import com.example.demo.global.service.SsePayloadDto;
 import com.example.demo.global.service.SseService;
-import com.example.demo.global.util.CursorUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +44,7 @@ public class GuestbookService {
     private final QrcodeBenefitService qrcodeBenefitService;
     private final SmsService smsService;
     private final SseService sseService;
+    private final GuestbookQueryService guestbookQueryService;
 
     private boolean isOpenQrcodeEvent(QrcodeEvent qrcodeEvent) {
         LocalDateTime now = LocalDateTime.now();
@@ -81,8 +81,10 @@ public class GuestbookService {
         Guestbook savedGuestbook = guestbookRepository.save(guestbook);
 
         // * SSE publish: 실시간 방명록 생성 이벤트
-        var ssePayload = GuestbookDto.GuestbookCreatedSsePayload.fromEntity(savedGuestbook);
-        sseService.publish(new SsePayloadDto.GuestbookCreatedPayload(ssePayload));
+        GuestbookDto.GuestbookCreatedSsePayload ssePayload = GuestbookDto.GuestbookCreatedSsePayload
+                .fromEntity(savedGuestbook);
+        // sseService.publish(new SsePayloadDto.GuestbookCreatedPayload(ssePayload));
+        eventPublisher.publishEvent(new SsePayloadDto.GuestbookCreatedPayload(ssePayload));
 
         // * NOTE: 알림 기능(문자 전송)
         SmsEventDto smsEvent = SmsEventFactory.createGuestbookEvent(phoneNumber, eventTitle);
@@ -126,40 +128,21 @@ public class GuestbookService {
         return GuestbookDto.ListResponse.fromEntity(pageAdapter);
     }
 
-    /**
-     * 실시간 방명록 생성 이벤트 리플레이
-     */
     public void replay(String topic, SseEmitter emitter, String lastEventId, String shortId, int size) {
+        List<GuestbookDto.GuestbookCreatedSsePayload> payloads = guestbookQueryService.loadReplayPayloads(shortId,
+                lastEventId, size);
 
-        if (lastEventId == null)
-            return;
-
-        LocalDateTime afterCreatedAt = CursorUtil.getLocalDateTimeFromSseEventId(lastEventId);
-        UUID afterId = CursorUtil.getIdFromSseEventId(lastEventId);
-
-        QrcodeEvent qrcodeEvent = qrcodeEventService.findByShortIdInternal(shortId);
-        Pageable pageable = PageRequest.of(0, size,
-                Sort.by(Sort.Direction.ASC, "createdAt").and(Sort.by(Sort.Direction.ASC, "id")));
-
-        List<Guestbook> guestbooks = guestbookRepository.findAfterCursor(qrcodeEvent, afterCreatedAt, afterId,
-                pageable);
-
-        for (Guestbook guestbook : guestbooks) {
-            GuestbookDto.GuestbookCreatedSsePayload payload = GuestbookDto.GuestbookCreatedSsePayload.fromEntity(guestbook);
+        for (GuestbookDto.GuestbookCreatedSsePayload payload : payloads) {
             SsePayloadDto.GuestbookCreatedPayload ssePayload = new SsePayloadDto.GuestbookCreatedPayload(payload);
-
             try {
-                emitter.send(
-                    SseEmitter.event()
+                emitter.send(SseEmitter.event()
                         .id(ssePayload.getEventId())
                         .name(ssePayload.getEventName())
-                        .data(ssePayload.getPayload())
-                );
-
+                        .data(ssePayload.getPayload()));
             } catch (IOException e) {
                 sseService.completeAndCleanup(ssePayload.getTopic(), emitter);
             }
         }
-        
     }
+
 }

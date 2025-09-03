@@ -19,14 +19,17 @@ public class SsePayloadDto {
 
     @Getter
     public static class GuestbookCreatedPayload implements SsePayload {
+        // * topic: 서버 내부 라우팅 키
+        // * eventName: 클라이언트 라우팅 키 
+        
         private final String topic;
-        private final String eventName = "guestbook-created";
+        private final String eventName = "guestbook:created";
         private final String eventId;
         private final Object payload;
 
         public GuestbookCreatedPayload(GuestbookDto.GuestbookCreatedSsePayload payload) {
-            this.topic = "guestbook:" + payload.getShortId();
-            this.eventId = CursorUtil.toSseEventId(payload.getCreatedAt(), payload.getId(), payload.getShortId());
+            this.topic = "guestbook:created:" + payload.getShortId();
+            this.eventId = CursorUtil.toSseEventId(payload.getCreatedAt().toString(), payload.getId(), payload.getShortId());
             this.payload = payload;
         }
     }

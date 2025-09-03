@@ -20,8 +20,7 @@ import lombok.NoArgsConstructor;
                 name = "unique_guestbook_short_id_phone_number",
                 columnNames = { "short_id", "phone_number" })
 }, indexes = {
-        @Index(name = "idx_guestbook_short_id", columnList = "short_id"),
-        @Index(name = "idx_guestbook_created_at", columnList = "created_at")
+        @Index(name = "idx_guestbook_sid_created_id", columnList = "short_id, created_at, id")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

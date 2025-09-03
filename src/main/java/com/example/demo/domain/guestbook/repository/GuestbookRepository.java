@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.demo.domain.guestbook.dto.GuestbookDto;
 import com.example.demo.domain.guestbook.entity.Guestbook;
 import com.example.demo.domain.qrcode.entity.QrcodeEvent;
 
@@ -33,14 +34,19 @@ public interface GuestbookRepository extends JpaRepository<Guestbook, UUID> {
                Pageable pageable);
 
      @Query("""
-               select g from Guestbook g
-                    where g.qrcodeEvent = :qrcodeEvent
-                    and ( g.createdAt > :afterCreatedAt
+                 select new com.example.demo.domain.guestbook.dto.GuestbookDto$GuestbookCreatedSsePayload(
+                   g.id, g.name, g.createdAt, e.shortId, b.availableAttendeeCount
+                 )
+                 from Guestbook g
+                    join g.qrcodeEvent e
+                    left join e.qrcodeBenefit b
+                 where e.shortId = :shortId
+                   and ( g.createdAt > :afterCreatedAt
                          or (g.createdAt = :afterCreatedAt and g.id > :afterId) )
-                    order by g.createdAt asc, g.id asc
+                 order by g.createdAt asc, g.id asc
                """)
-     List<Guestbook> findAfterCursor(
-               @Param("qrcodeEvent") QrcodeEvent qrcodeEvent,
+     List<GuestbookDto.GuestbookCreatedSsePayload> findAfterCursorProjection(
+               @Param("shortId") String shortId,
                @Param("afterCreatedAt") LocalDateTime afterCreatedAt,
                @Param("afterId") UUID afterId,
                Pageable pageable);

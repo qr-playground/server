@@ -19,7 +19,19 @@ public class AsyncConfig {
         executor.setMaxPoolSize(100);
         executor.setQueueCapacity(30);
         executor.setThreadNamePrefix("AsyncThread-");
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "sseExecutor")
+    public Executor sseExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(15);
+        executor.setMaxPoolSize(100);
+        executor.setQueueCapacity(30);
+        executor.setThreadNamePrefix("SseThread-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
     }

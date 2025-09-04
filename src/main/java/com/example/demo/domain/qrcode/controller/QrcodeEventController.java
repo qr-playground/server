@@ -1,7 +1,5 @@
 package com.example.demo.domain.qrcode.controller;
 
-import java.util.List;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,9 +17,7 @@ import com.example.demo.global.security.user.CustomUserDetails;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @RestController
 @RequestMapping("/api/qrcode/event")
 @RequiredArgsConstructor
@@ -36,7 +32,7 @@ public class QrcodeEventController {
      * @param userDetails           인증된 사용자 정보
      * @return 생성된 QR 코드 이벤트 정보
      */
-    @PostMapping
+    @PostMapping("")
     public ResponseEntity<QrcodeEventDto.Response> createQrcodeEvent(
             @Valid @RequestBody QrcodeEventDto.Create request,
             @AuthenticationPrincipal CustomUserDetails userDetails) {

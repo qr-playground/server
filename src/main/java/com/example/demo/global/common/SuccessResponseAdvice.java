@@ -1,12 +1,15 @@
 package com.example.demo.global.common;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpResponse;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
@@ -18,9 +21,12 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SuccessResponseAdvice implements ResponseBodyAdvice<Object> {
 
     private final ObjectMapper objectMapper;
+    private final JdbcTemplate masterJdbcTemplate;
 
-    public SuccessResponseAdvice(ObjectMapper objectMapper) {
+    public SuccessResponseAdvice(ObjectMapper objectMapper,
+            @Qualifier("masterJdbcTemplate") JdbcTemplate masterJdbcTemplate) {
         this.objectMapper = objectMapper;
+        this.masterJdbcTemplate = masterJdbcTemplate;
     }
 
     @Override
@@ -40,6 +46,7 @@ public class SuccessResponseAdvice implements ResponseBodyAdvice<Object> {
 
         // 성공 응답인 경우
         if (httpStatus.is2xxSuccessful()) {
+            attachLsnHeaderIfNeeded(request, response, servletResponse, status);
             // String 타입 처리를 위한 특별 케이스
             if (body instanceof String) {
                 try {
@@ -62,5 +69,28 @@ public class SuccessResponseAdvice implements ResponseBodyAdvice<Object> {
     @Override
     public boolean supports(MethodParameter returnType, Class converterType) {
         return true;
+    }
+
+    private void attachLsnHeaderIfNeeded(ServerHttpRequest request, ServerHttpResponse response,
+            HttpServletResponse servletResponse, int status) {
+        try {
+            HttpMethod method = request.getMethod();
+            String methodValue = (method != null) ? method.name() : null;
+            if (methodValue == null)
+                return;
+
+            boolean isWriteMethod = "POST".equals(methodValue) || "PUT".equals(methodValue)
+                    || "PATCH".equals(methodValue) || "DELETE".equals(methodValue);
+            if (!isWriteMethod)
+                return;
+            if (status < 200 || status >= 300)
+                return;
+
+            String lsn = masterJdbcTemplate.queryForObject("select pg_current_wal_lsn()::text", String.class);
+            if (lsn != null && !lsn.isBlank()) {
+                response.getHeaders().set("X-Last-LSN", lsn);
+            }
+        } catch (Exception ignore) {
+        }
     }
 }
